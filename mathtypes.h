@@ -5,41 +5,53 @@
 namespace mkb2
 {
 
+// Some native Gamecube typedefs, also happen to correspond to the standard Rust types
+// We'll be using standard C++ bool instead of Gamecube's BOOL typedef'd to int
+typedef uint8_t u8;
+typedef int8_t s8;
+typedef uint16_t u16;
+typedef int16_t s16;
+typedef uint32_t u32;
+typedef int32_t s32;
+typedef float f32;
+typedef double f64;
+typedef size_t usize;
+
 struct Vec2f
 {
-    float x;
-    float y;
+    f32 x;
+    f32 y;
 };
 
 struct Vec2i
 {
-    int32_t x;
-    int32_t y;
+    s32 x;
+    s32 y;
 };
 
 struct Vec3f
 {
-    float x;
-    float y;
-    float z;
+    f32 x;
+    f32 y;
+    f32 z;
 };
 
 struct Vec3s
 {
-    int16_t x;
-    int16_t y;
-    int16_t z;
+    s16 x;
+    s16 y;
+    s16 z;
 };
 
-typedef float Mtx[3][4];
-typedef float Mtx44[4][4];
+typedef f32 Mtx[3][4];
+typedef f32 Mtx44[4][4];
 
 struct Quat
 {
-    float x;
-    float y;
-    float z;
-    float w;
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 w;
 };
 
 }

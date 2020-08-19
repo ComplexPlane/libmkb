@@ -11,8 +11,8 @@
     ({                        \
         static_assert(sizeof(val) == 2); \
         auto tmp = val;       \
-        uint16_t *int_ptr = (uint16_t *) (&tmp); \
-        uint8_t *byte_ptr = (uint8_t *) (&tmp);  \
+        u16 *int_ptr = (u16 *) (&tmp); \
+        u8 *byte_ptr = (u8 *) (&tmp);  \
         *int_ptr = (byte_ptr[1] << 0) | (byte_ptr[0] << 8); \
         val = tmp;            \
     })
@@ -21,8 +21,8 @@
     ({                        \
         static_assert(sizeof(val) == 4); \
         auto tmp = val;       \
-        uint32_t *int_ptr = (uint32_t *) (&tmp); \
-        uint8_t *byte_ptr = (uint8_t *) (&tmp);  \
+        u32 *int_ptr = (u32 *) (&tmp); \
+        u8 *byte_ptr = (u8 *) (&tmp);  \
         *int_ptr = (byte_ptr[3] << 0) | (byte_ptr[2] << 8) | (byte_ptr[1] << 16) | (byte_ptr[0] << 24); \
         val = tmp;            \
     })
@@ -66,9 +66,9 @@ static void fix_vec3s_endianness(Vec3s *vec)
     FIX_BIG_ENDIAN16(vec->z);
 }
 
-static void fix_keyframe_list_endianness(uint32_t keyframe_count, StagedefAnimKeyframe *keyframe_list)
+static void fix_keyframe_list_endianness(u32 keyframe_count, StagedefAnimKeyframe *keyframe_list)
 {
-    for (uint32_t i = 0; i < keyframe_count; i++)
+    for (u32 i = 0; i < keyframe_count; i++)
     {
         StagedefAnimKeyframe *keyframe = &keyframe_list[i];
         FIX_BIG_ENDIAN32(keyframe->easing);
@@ -96,11 +96,11 @@ static void fix_collision_header_endianness(StagedefCollisionHeader *coli_header
     // Fix collision triangle and collision grid endianness
     // I don't think we can easily know the total number of triangles, so we'll fix the endianness of triangles
     // we discover in the collision grid for now. This may involve fixing triangles multiple times.
-    uint32_t num_grid_cells = coli_header->collision_grid_step_count.x * coli_header->collision_grid_step_count.y;
-    for (uint32_t cell_idx = 0; cell_idx < num_grid_cells; cell_idx++)
+    u32 num_grid_cells = coli_header->collision_grid_step_count.x * coli_header->collision_grid_step_count.y;
+    for (u32 cell_idx = 0; cell_idx < num_grid_cells; cell_idx++)
     {
-        uint16_t *tri_idx_list = coli_header->collision_grid_triangle_idx_list_list[cell_idx];
-        for (uint32_t tri_idx_idx = 0; tri_idx_list[tri_idx_idx] != TRI_IDX_LIST_END; tri_idx_idx++)
+        u16 *tri_idx_list = coli_header->collision_grid_triangle_idx_list_list[cell_idx];
+        for (u32 tri_idx_idx = 0; tri_idx_list[tri_idx_idx] != TRI_IDX_LIST_END; tri_idx_idx++)
         {
             FIX_BIG_ENDIAN16(tri_idx_list[tri_idx_idx]);
             StagedefCollisionTri *tri = &coli_header->collision_triangle_list[tri_idx_list[tri_idx_idx]];
@@ -117,7 +117,7 @@ static void fix_collision_header_endianness(StagedefCollisionHeader *coli_header
     fix_vec2f_endianness(&coli_header->collision_grid_step);
 
     // Fix goals
-    for (uint32_t i = 0; i < coli_header->goal_count; i++)
+    for (u32 i = 0; i < coli_header->goal_count; i++)
     {
         StagedefGoal *goal = &coli_header->goal_list[i];
         fix_vec3f_endianness(&goal->position);
@@ -126,7 +126,7 @@ static void fix_collision_header_endianness(StagedefCollisionHeader *coli_header
     }
 
     // Fix bumpers
-    for (uint32_t i = 0; i < coli_header->bumper_count; i++)
+    for (u32 i = 0; i < coli_header->bumper_count; i++)
     {
         StagedefBumper *bumper = &coli_header->bumper_list[i];
         fix_vec3f_endianness(&bumper->position);
@@ -135,7 +135,7 @@ static void fix_collision_header_endianness(StagedefCollisionHeader *coli_header
     }
 
     // Fix jamabars
-    for (uint32_t i = 0; i < coli_header->jamabar_count; i++)
+    for (u32 i = 0; i < coli_header->jamabar_count; i++)
     {
         StagedefJamabar *jamabar = &coli_header->jamabar_list[i];
         fix_vec3f_endianness(&jamabar->position);
@@ -144,7 +144,7 @@ static void fix_collision_header_endianness(StagedefCollisionHeader *coli_header
     }
 
     // Fix bananas
-    for (uint32_t i = 0; i < coli_header->banana_count; i++)
+    for (u32 i = 0; i < coli_header->banana_count; i++)
     {
         StagedefBanana *banana = &coli_header->banana_list[i];
         fix_vec3f_endianness(&banana->position);
@@ -152,7 +152,7 @@ static void fix_collision_header_endianness(StagedefCollisionHeader *coli_header
     }
 
     // Fix cone collision objects
-    for (uint32_t i = 0; i < coli_header->cone_collision_object_count; i++)
+    for (u32 i = 0; i < coli_header->cone_collision_object_count; i++)
     {
         StagedefConeCollision *cone = &coli_header->cone_collision_object_list[i];
         fix_vec3f_endianness(&cone->position);
@@ -161,7 +161,7 @@ static void fix_collision_header_endianness(StagedefCollisionHeader *coli_header
     }
 
     // Fix sphere collision objects
-    for (uint32_t i = 0; i < coli_header->sphere_collision_object_count; i++)
+    for (u32 i = 0; i < coli_header->sphere_collision_object_count; i++)
     {
         StagedefSphereCollision *sphere = &coli_header->sphere_collision_object_list[i];
         fix_vec3f_endianness(&sphere->position);
@@ -169,7 +169,7 @@ static void fix_collision_header_endianness(StagedefCollisionHeader *coli_header
     }
 
     // Fix cylinder collision objects
-    for (uint32_t i = 0; i < coli_header->cylinder_collision_object_count; i++)
+    for (u32 i = 0; i < coli_header->cylinder_collision_object_count; i++)
     {
         StagedefCylinderCollision *cylinder = &coli_header->cylinder_collision_object_list[i];
         fix_vec3f_endianness(&cylinder->position);
@@ -187,13 +187,13 @@ static void fix_stagedef_endianness()
     FIX_BIG_ENDIAN32(g_stagedef->magic_number_a);
     FIX_BIG_ENDIAN32(g_stagedef->magic_number_b);
 
-    for (uint32_t i = 0; i < g_stagedef->collision_header_count; i++)
+    for (u32 i = 0; i < g_stagedef->collision_header_count; i++)
     {
         fix_collision_header_endianness(&g_stagedef->collision_header_list[i]);
     }
 }
 
-void load_stagedef(uint32_t stage_id)
+void load_stagedef(u32 stage_id)
 {
     char stage_lz_filename[32];
     sprintf(stage_lz_filename, "STAGE%03d.lz", stage_id);
@@ -202,8 +202,8 @@ void load_stagedef(uint32_t stage_id)
     // Here we just assume a generic function that translates (stage file name) -> (pointer to compressed LZ)
     void *compressed_lz = read_file(stage_lz_filename);
 
-    uint32_t compressed_filesize_including_header = OSRoundUp32B(((uint32_t *) compressed_lz)[0]);
-    uint32_t uncompressed_filesize_not_including_header = OSRoundUp32B(((uint32_t *) compressed_lz)[1]);
+    u32 compressed_filesize_including_header = OSRoundUp32B(((u32 *) compressed_lz)[0]);
+    u32 uncompressed_filesize_not_including_header = OSRoundUp32B(((u32 *) compressed_lz)[1]);
     void *uncompressed_lz = MKB2_ALLOC_OR_PANIC(uncompressed_filesize_not_including_header);
     decompress_lz(compressed_lz, uncompressed_lz);
 
@@ -231,7 +231,7 @@ void load_stagedef(uint32_t stage_id)
     FIX_BIG_ENDIAN32(g_stagedef->collision_header_list);
     FIX_BIG_ENDIAN32(g_stagedef->collision_header_count);
     STAGEDEF_OFFSET_TO_PTR(g_stagedef->collision_header_list);
-    for (uint32_t i = 0; i < g_stagedef->collision_header_count; i++)
+    for (u32 i = 0; i < g_stagedef->collision_header_count; i++)
     {
         StagedefCollisionHeader *coli_header = &g_stagedef->collision_header_list[i];
 
@@ -275,15 +275,15 @@ void load_stagedef(uint32_t stage_id)
             fix_vec2s_endianness(&coli_header->collision_grid_step_count);
             STAGEDEF_OFFSET_TO_PTR_NOCHECK(coli_header->collision_grid_triangle_idx_list_list);
 
-            uint32_t num_grid_cells = coli_header->collision_grid_step_count.x * coli_header->collision_grid_step_count.y;
-            for (uint32_t grid_cell_idx = 0; grid_cell_idx < num_grid_cells; grid_cell_idx++)
+            u32 num_grid_cells = coli_header->collision_grid_step_count.x * coli_header->collision_grid_step_count.y;
+            for (u32 grid_cell_idx = 0; grid_cell_idx < num_grid_cells; grid_cell_idx++)
             {
                 // Manually convert each triangle index list to a pointer without STAGEDEF_OFFSET_TO_PTR for now.
                 // Using the macro seems to give some casting issues with reference types... it _may_ work in C
                 // and just not in C++ though
-                uint16_t **triangle_idx_list = &coli_header->collision_grid_triangle_idx_list_list[grid_cell_idx];
+                u16 **triangle_idx_list = &coli_header->collision_grid_triangle_idx_list_list[grid_cell_idx];
                 FIX_BIG_ENDIAN32(*triangle_idx_list);
-                *triangle_idx_list = (uint16_t *) ((uintptr_t) *triangle_idx_list + (uintptr_t) g_stagedef);
+                *triangle_idx_list = (u16 *) ((uintptr_t) *triangle_idx_list + (uintptr_t) g_stagedef);
             }
         }
 
@@ -398,7 +398,7 @@ void load_stagedef(uint32_t stage_id)
     FIX_BIG_ENDIAN32(g_stagedef->reflective_stage_model_list);
     FIX_BIG_ENDIAN32(g_stagedef->reflective_stage_model_count);
     STAGEDEF_OFFSET_TO_PTR(g_stagedef->reflective_stage_model_list);
-    for (uint32_t i = 0; i < g_stagedef->reflective_stage_model_count; i++)
+    for (u32 i = 0; i < g_stagedef->reflective_stage_model_count; i++)
     {
         StagedefReflectiveStageModel *reflective_model = &g_stagedef->reflective_stage_model_list[i];
         FIX_BIG_ENDIAN32(reflective_model->model_name);
@@ -411,7 +411,7 @@ void load_stagedef(uint32_t stage_id)
     FIX_BIG_ENDIAN32(g_stagedef->stage_model_instance_list);
     FIX_BIG_ENDIAN32(g_stagedef->stage_model_instance_count);
     STAGEDEF_OFFSET_TO_PTR(g_stagedef->stage_model_instance_list);
-    for (uint32_t i = 0; i < g_stagedef->stage_model_instance_count; i++)
+    for (u32 i = 0; i < g_stagedef->stage_model_instance_count; i++)
     {
         StagedefStageModelInstance *model_instance = &g_stagedef->stage_model_instance_list[i];
         FIX_BIG_ENDIAN32(model_instance->stage_model_a);
@@ -426,7 +426,7 @@ void load_stagedef(uint32_t stage_id)
     FIX_BIG_ENDIAN32(g_stagedef->stage_model_b_list);
     FIX_BIG_ENDIAN32(g_stagedef->stage_model_b_count);
     STAGEDEF_OFFSET_TO_PTR(g_stagedef->stage_model_b_list);
-    for (uint32_t i = 0; i < g_stagedef->stage_model_b_count; i++)
+    for (u32 i = 0; i < g_stagedef->stage_model_b_count; i++)
     {
         StagedefStageModelPtrB *model_b = &g_stagedef->stage_model_b_list[i];
         FIX_BIG_ENDIAN32(model_b->stage_model_a);
@@ -477,7 +477,7 @@ void load_stagedef(uint32_t stage_id)
     FIX_BIG_ENDIAN32(g_stagedef->wormhole_list);
     FIX_BIG_ENDIAN32(g_stagedef->wormhole_count);
     STAGEDEF_OFFSET_TO_PTR(g_stagedef->wormhole_list);
-    for (uint32_t i = 0; i < g_stagedef->wormhole_count; i++)
+    for (u32 i = 0; i < g_stagedef->wormhole_count; i++)
     {
         StagedefWormhole *wormhole = &g_stagedef->wormhole_list[i];
         FIX_BIG_ENDIAN32(wormhole->destination);
