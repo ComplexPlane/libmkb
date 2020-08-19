@@ -9,4 +9,4 @@ set(CMAKE_CXX_FLAGS -m32)
 
 include_directories(.)
 
-add_executable(libmkb main.cpp lzload.cpp)
+add_executable(libmkb main.cpp lzload.cpp pool.cpp)
