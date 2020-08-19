@@ -287,7 +287,7 @@ struct StagedefCollisionHeader
     uint16_t anim_group_id; /* For use with buttons - Must be non-zero if you want to assign a group ID */
     uint8_t padding[2];
     uint32_t button_count;
-    struct StagedefSwitch *button_list;
+    struct StagedefButton *button_list;
     uint8_t unk_0xb0[4];
     struct StagedefMystery5 *mystery5;
     float seesaw_sensitivity; /* Higher is more sensitive, negative makes the seesaw reversed */
@@ -395,7 +395,7 @@ struct StagedefFileHeader
     struct StagedefStageModelPtrB *stage_model_b_list;
     uint8_t unk_0x9c[12];
     uint32_t button_count;
-    struct StagedefSwitch *button_list;
+    struct StagedefButton *button_list;
     struct StagedefFogAnimHeader *fog_animation_header; /* Nullable */
     uint32_t wormhole_count;
     struct StagedefWormhole *wormhole_list;
@@ -503,7 +503,7 @@ struct StagedefButton
     uint8_t padding[2];
 } __attribute__((__packed__));
 
-static_assert(sizeof(StagedefSwitch) == 0x18);
+static_assert(sizeof(StagedefButton) == 0x18);
 
 struct StagedefFog
 {
