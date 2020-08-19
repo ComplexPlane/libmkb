@@ -155,7 +155,7 @@ enum BananaType
 struct StagedefBanana
 {
     struct Vec3f position;
-    enum BananaType type;
+    uint32_t type;
 } __attribute__((__packed__));
 
 static_assert(sizeof(StagedefBanana) == 0x10);
@@ -439,7 +439,7 @@ static_assert(sizeof(StagedefFalloutVolume) == 0x20);
 
 struct StagedefCollisionTri
 {
-    struct Vec3f point_1_position;
+    struct Vec3f point1_position;
     struct Vec3f normal;
     struct Vec3s rotation_from_xy;
     uint8_t padding[2];

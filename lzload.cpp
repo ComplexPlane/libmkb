@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <cstdio>
 
+#define TRI_IDX_LIST_END 0xffff
+
 #define FIX_BIG_ENDIAN16(val) \
     ({                        \
         static_assert(sizeof(val) == 2); \
@@ -38,6 +40,12 @@ namespace mkb2
 
 StagedefFileHeader *g_stagedef;
 
+static void fix_vec2f_endianness(Vec2f *vec)
+{
+    FIX_BIG_ENDIAN32(vec->x);
+    FIX_BIG_ENDIAN32(vec->y);
+}
+
 static void fix_vec3f_endianness(Vec3f *vec)
 {
     FIX_BIG_ENDIAN32(vec->x);
@@ -58,11 +66,131 @@ static void fix_vec3s_endianness(Vec3s *vec)
     FIX_BIG_ENDIAN16(vec->z);
 }
 
+static void fix_keyframe_list_endianness(uint32_t keyframe_count, StagedefAnimKeyframe *keyframe_list)
+{
+    for (uint32_t i = 0; i < keyframe_count; i++)
+    {
+        StagedefAnimKeyframe *keyframe = &keyframe_list[i];
+        FIX_BIG_ENDIAN32(keyframe->easing);
+        FIX_BIG_ENDIAN32(keyframe->time);
+        FIX_BIG_ENDIAN32(keyframe->value);
+    }
+}
+
+static void fix_collision_header_endianness(StagedefCollisionHeader *coli_header)
+{
+    fix_vec3f_endianness(&coli_header->origin);
+    fix_vec3s_endianness(&coli_header->initial_rotation);
+    FIX_BIG_ENDIAN16(coli_header->anim_loop_type_and_seesaw);
+
+    StagedefAnimHeader *anim_header = coli_header->animation_header;
+    fix_keyframe_list_endianness(anim_header->rot_x_keyframe_count, anim_header->rot_x_keyframe_list);
+    fix_keyframe_list_endianness(anim_header->rot_y_keyframe_count, anim_header->rot_y_keyframe_list);
+    fix_keyframe_list_endianness(anim_header->rot_z_keyframe_count, anim_header->rot_z_keyframe_list);
+    fix_keyframe_list_endianness(anim_header->pos_x_keyframe_count, anim_header->pos_x_keyframe_list);
+    fix_keyframe_list_endianness(anim_header->pos_y_keyframe_count, anim_header->pos_y_keyframe_list);
+    fix_keyframe_list_endianness(anim_header->pos_z_keyframe_count, anim_header->pos_z_keyframe_list);
+
+    fix_vec3f_endianness(&coli_header->conveyor_speed);
+
+    // Fix collision triangle and collision grid endianness
+    // I don't think we can easily know the total number of triangles, so we'll fix the endianness of triangles
+    // we discover in the collision grid for now. This may involve fixing triangles multiple times.
+    uint32_t num_grid_cells = coli_header->collision_grid_step_count.x * coli_header->collision_grid_step_count.y;
+    for (uint32_t cell_idx = 0; cell_idx < num_grid_cells; cell_idx++)
+    {
+        uint16_t *tri_idx_list = coli_header->collision_grid_triangle_idx_list_list[cell_idx];
+        for (uint32_t tri_idx_idx = 0; tri_idx_list[tri_idx_idx] != TRI_IDX_LIST_END; tri_idx_idx++)
+        {
+            FIX_BIG_ENDIAN16(tri_idx_list[tri_idx_idx]);
+            StagedefCollisionTri *tri = &coli_header->collision_triangle_list[tri_idx_list[tri_idx_idx]];
+            fix_vec3f_endianness(&tri->point1_position);
+            fix_vec3f_endianness(&tri->normal);
+            fix_vec3s_endianness(&tri->rotation_from_xy);
+            fix_vec2f_endianness(&tri->point2_delta_pos_from_point1);
+            fix_vec2f_endianness(&tri->point3_delta_pos_from_point1);
+            fix_vec2f_endianness(&tri->tangent);
+            fix_vec2f_endianness(&tri->bitangent);
+        }
+    }
+    fix_vec2f_endianness(&coli_header->collision_grid_start);
+    fix_vec2f_endianness(&coli_header->collision_grid_step);
+
+    // Fix goals
+    for (uint32_t i = 0; i < coli_header->goal_count; i++)
+    {
+        StagedefGoal *goal = &coli_header->goal_list[i];
+        fix_vec3f_endianness(&goal->position);
+        fix_vec3s_endianness(&goal->rotation);
+        FIX_BIG_ENDIAN16(goal->goal_flags);
+    }
+
+    // Fix bumpers
+    for (uint32_t i = 0; i < coli_header->bumper_count; i++)
+    {
+        StagedefBumper *bumper = &coli_header->bumper_list[i];
+        fix_vec3f_endianness(&bumper->position);
+        fix_vec3s_endianness(&bumper->rotation);
+        fix_vec3f_endianness(&bumper->scale);
+    }
+
+    // Fix jamabars
+    for (uint32_t i = 0; i < coli_header->jamabar_count; i++)
+    {
+        StagedefJamabar *jamabar = &coli_header->jamabar_list[i];
+        fix_vec3f_endianness(&jamabar->position);
+        fix_vec3s_endianness(&jamabar->rotation);
+        fix_vec3f_endianness(&jamabar->scale);
+    }
+
+    // Fix bananas
+    for (uint32_t i = 0; i < coli_header->banana_count; i++)
+    {
+        StagedefBanana *banana = &coli_header->banana_list[i];
+        fix_vec3f_endianness(&banana->position);
+        FIX_BIG_ENDIAN32(banana->type);
+    }
+
+    // Fix cone collision objects
+    for (uint32_t i = 0; i < coli_header->cone_collision_object_count; i++)
+    {
+        StagedefConeCollision *cone = &coli_header->cone_collision_object_list[i];
+        fix_vec3f_endianness(&cone->position);
+        fix_vec3s_endianness(&cone->rotation);
+        fix_vec3f_endianness(&cone->scale);
+    }
+
+    // Fix sphere collision objects
+    for (uint32_t i = 0; i < coli_header->sphere_collision_object_count; i++)
+    {
+        StagedefSphereCollision *sphere = &coli_header->sphere_collision_object_list[i];
+        fix_vec3f_endianness(&sphere->position);
+        FIX_BIG_ENDIAN32(sphere->radius);
+    }
+
+    // Fix cylinder collision objects
+    for (uint32_t i = 0; i < coli_header->cylinder_collision_object_count; i++)
+    {
+        StagedefCylinderCollision *cylinder = &coli_header->cylinder_collision_object_list[i];
+        fix_vec3f_endianness(&cylinder->position);
+        FIX_BIG_ENDIAN32(cylinder->radius);
+        FIX_BIG_ENDIAN32(cylinder->height);
+        fix_vec3s_endianness(&cylinder->rotation);
+    }
+
+    // TODO the rest
+}
+
 // Fix the endianness of all stagedef values excluding pointers and list counts
-static void fix_remaining_stagedef_endianness()
+static void fix_stagedef_endianness()
 {
     FIX_BIG_ENDIAN32(g_stagedef->magic_number_a);
     FIX_BIG_ENDIAN32(g_stagedef->magic_number_b);
+
+    for (uint32_t i = 0; i < g_stagedef->collision_header_count; i++)
+    {
+        fix_collision_header_endianness(&g_stagedef->collision_header_list[i]);
+    }
 }
 
 void load_stagedef(uint32_t stage_id)
@@ -383,7 +511,7 @@ void load_stagedef(uint32_t stage_id)
         // TODO same with model a stuff...
     }
 
-    fix_remaining_stagedef_endianness();
+    fix_stagedef_endianness();
 }
 
 }
