@@ -52,11 +52,4 @@ s16 big_to_native(s16 big)
     return native;
 }
 
-void *big_to_native(void *big)
-{
-    void *native;
-    big_to_native((u32 *) &big, (u32 *) &native);
-    return native;
-}
-
 }

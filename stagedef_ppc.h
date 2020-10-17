@@ -6,9 +6,9 @@
  * SMB2 Stage Definition (original PowerPC)
  *
  * These structures denote a SMB2 Stagedef in its original form as loaded directly on the Gamecube's Gekko PowerPC
- * processor: with 32-bit pointer bit width and little endian byte ordering.
+ * processor: 32-bit offsets and little-endian byte ordering.
  *
- * See `powerpc.h` for "native" versions of these structures.
+ * These are converted to the platform-local variants defined in `stagedef.h`.
  */
 
 namespace mkb2

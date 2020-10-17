@@ -11,7 +11,7 @@ namespace mkb2
  * SMB2 Stage Definition (native)
  *
  * These structures denote a SMB2 stagedef in "native form", a.k.a. a form which is otherwise
- * identical to the original PowerPC format except with native endianness and native pointer bit widths.
+ * identical to the original PowerPC format except with platform-local endianness and pointer bit-width.
  * In the original format, pointers are 32-bit and the byte ordering is big endian, but pointers may be
  * 64-bit and byte ordering may be little endian in this format depending on the target architecture.
  *
