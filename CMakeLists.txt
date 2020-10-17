@@ -5,4 +5,4 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(.)
 
-add_executable(libmkb main.cpp lzload.cpp pool.cpp stagedef_cnv.cpp endian.cpp)
+add_executable(libmkb main.cpp lzload.cpp pool.cpp stagedef_cnv.cpp endian.cpp mathutil.h mathutil.cpp vecutil.h)
