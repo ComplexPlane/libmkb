@@ -3,13 +3,52 @@
 #include "mathtypes.h"
 #include "vecutil.h"
 
+// It seems that _USE_MATH_DEFINES must be placed above Eigen includes for constants in cmath like M_PI to work
 #define _USE_MATH_DEFINES
+#include <Eigen/Dense>
 #include <cmath>
 
 // TODO implement the equivalent of floating-point condition register checks?
 
 namespace mkb2
 {
+
+/*
+ * Eigen transform matrix type used to wrap the game's Mtx type.
+ */
+using EigenMtx = Eigen::Transform<f32, 3, Eigen::AffineCompact, Eigen::RowMajor>;
+
+/*
+ * Eigen vector map type used to wrap the game's Vec3f type.
+ */
+using EigenVec3fWrapper = Eigen::Map<Eigen::Vector3f>;
+
+/*
+ * Matrix A and Matrix B in the game's matrix format.
+ *
+ * Computations are performed on EigenMtx equivalents, but the result is coped to these native
+ * matrices since the game reads them directly sometimes. If someone can figure out how to wrap
+ * Eigen Transform matrices around these without needing to copy, feel free to fix it.
+ */
+static Mtx s_mtxa; // Matrix A
+static Mtx s_mtxb; // Matrix B
+
+/*
+ * The matrix stack.
+ *
+ * I don't know exactly how large the stack is in the locked cache in the original source.
+ */
+static Mtx s_mtx_stack[128];
+static usize s_mtx_stack_ptr;
+
+/*
+ * Eigen wrappers around Matrix A and Matrix B.
+ *
+ * Only for convenience, these don't exist in the game.
+ */
+
+static EigenMtx s_eigen_mtxa;
+static EigenMtx s_eigen_mtxb;
 
 /*
  * Convert a s16 angle to radians.
@@ -29,6 +68,21 @@ inline f64 s16_to_radians(s16 angle)
 inline s16 radians_to_s16(f64 angle_rad)
 {
     return angle_rad * 0x8000 / M_PI;
+}
+
+/*
+ * Copies the Eigen Matrix A to the game's native Matrix A.
+ *
+ * Not necessary if someone figures out how to make Eigen Transform wrap
+ * the game's Matrix A directly.
+ */
+inline void copy_mtxa()
+{
+    memcpy(&s_mtxa, s_eigen_mtxa.data(), sizeof(Mtx));
+}
+inline void copy_mtxb()
+{
+    memcpy(&s_mtxb, s_eigen_mtxb.data(), sizeof(Mtx));
 }
 
 void math_init() {}
@@ -86,34 +140,34 @@ s16 math_atan(f64 x)
     return radians_to_s16(atan(x));
 }
 
-float math_dot_normalized_clamp(Vec3f *vec1, Vec3f *vec2)
+f32 math_dot_normalized_clamp(Vec3f *vec1, Vec3f *vec2)
 {
-    float dot = VEC_DOT(*vec1, *vec2);
-    float len_sq_prod = VEC_LEN_SQ(*vec1) * VEC_LEN_SQ(*vec2);
+    f32 dot = VEC_DOT(*vec1, *vec2);
+    f32 len_sq_prod = VEC_LEN_SQ(*vec1) * VEC_LEN_SQ(*vec2);
 
     if (dot > 0.f)
     {
-        float denom = math_rsqrt(len_sq_prod);
+        f32 denom = math_rsqrt(len_sq_prod);
         return dot / denom;
     }
     return 0.f;
 }
 
-void math_scale_ray(float scale, Vec3f *ray_start, Vec3f *ray_end, Vec3f *out_ray_end)
+void math_scale_ray(f32 scale, Vec3f *ray_start, Vec3f *ray_end, Vec3f *out_ray_end)
 {
     Vec3f scaled_delta = VEC_SCALE(scale, VEC_SUB(*ray_end, *ray_start));
     *out_ray_end = VEC_ADD(*ray_start, scaled_delta);
 }
 
-void math_vec_set_length(float len, Vec3f *vec, Vec3f *out_vec)
+void math_vec_set_length(f32 len, Vec3f *vec, Vec3f *out_vec)
 {
-    float len_sq = VEC_LEN_SQ(*vec);
+    f32 len_sq = VEC_LEN_SQ(*vec);
 
     // Original source checks if it's positive, should be unnecessary
     if (len_sq > 0.f)
     {
-        float inv_len = math_rsqrt(len_sq);
-        float scale = inv_len * len;
+        f32 inv_len = math_rsqrt(len_sq);
+        f32 scale = inv_len * len;
         *out_vec = VEC_SCALE(scale, *vec);
     }
     else
@@ -122,12 +176,12 @@ void math_vec_set_length(float len, Vec3f *vec, Vec3f *out_vec)
     }
 }
 
-float math_vec_normalize_len(Vec3f *vec)
+f32 math_vec_normalize_len(Vec3f *vec)
 {
-    float len_sq = VEC_LEN_SQ(*vec);
+    f32 len_sq = VEC_LEN_SQ(*vec);
     if (len_sq > 0.f)
     {
-        float inv_len = math_rsqrt(len_sq);
+        f32 inv_len = math_rsqrt(len_sq);
         *vec = VEC_SCALE(inv_len, *vec);
         return len_sq * inv_len;
     }
@@ -136,12 +190,57 @@ float math_vec_normalize_len(Vec3f *vec)
     return 0.f;
 }
 
-float math_dot_normalized(Vec3f *vec1, Vec3f *vec2)
+f32 math_dot_normalized(Vec3f *vec1, Vec3f *vec2)
 {
-    float dot = VEC_DOT(*vec1, *vec2);
-    float len_sq_prod = VEC_LEN_SQ(*vec1) * VEC_LEN_SQ(*vec2);
-    float denom = math_rsqrt(len_sq_prod);
+    f32 dot = VEC_DOT(*vec1, *vec2);
+    f32 len_sq_prod = VEC_LEN_SQ(*vec1) * VEC_LEN_SQ(*vec2);
+    f32 denom = math_rsqrt(len_sq_prod);
     return dot / denom;
+}
+
+void math_set_mtxa_identity()
+{
+    s_eigen_mtxa.setIdentity();
+    copy_mtxa();
+}
+
+void math_set_mtx_identity(Mtx *mtx)
+{
+    EigenMtx emtx(EigenMtx::Identity());
+    memcpy(mtx, emtx.data(), sizeof(Mtx));
+}
+
+void math_set_mtxa_identity_sq()
+{
+    // TODO
+}
+
+void math_set_mtxa_translate_v(Vec3f *translate)
+{
+    // TODO
+}
+
+void math_set_mtxa_translate(f32 x, f32 y, f32 z)
+{
+    // TODO
+}
+
+void math_set_mtxa_rotate_x(s16 angle)
+{
+    s_eigen_mtxa *= Eigen::AngleAxis(s16_to_radians(angle), Eigen::Vector3f::UnitX());
+    copy_mtxa();
+}
+
+void math_set_mtxa_rotate_y(s16 angle)
+{
+    s_eigen_mtxa *= Eigen::AngleAxis(s16_to_radians(angle), Eigen::Vector3f::UnitY());
+    copy_mtxa();
+}
+
+void math_set_mtxa_rotate_z(s16 angle)
+{
+    s_eigen_mtxa *= Eigen::AngleAxis(s16_to_radians(angle), Eigen::Vector3f::UnitZ());
+    copy_mtxa();
 }
 
 }

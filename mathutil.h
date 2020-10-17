@@ -25,10 +25,10 @@ f32 math_sqrt(f64 x);
 f32 math_rsqrt(f64 x);
 
 /*
- * Computes the square-root and reciprocal square-root of `v` simultaneously.
+ * Computes the square-root and reciprocal square-root of `x` simultaneously.
  *
- * Writes `sqrt(v)` (or 0 if `v` is non-positive) to `out_sqrt`,
- * and returns `1/sqrt(v)` (or INFINITY if `v` is non-positive).
+ * Writes `sqrt(x)` (or 0 if `x` is non-positive) to `out_sqrt`,
+ * and returns `1/sqrt(x)` (or INFINITY if `x` is non-positive).
  */
 f32 math_sqrt_rsqrt(f64 x, f32 *out_sqrt);
 
@@ -65,32 +65,68 @@ s16 math_atan(f64 x);
  *
  * `vec1` and `vec2` need not be normal vectors themselves.
  */
-float math_dot_normalized_clamp(Vec3f *vec1, Vec3f *vec2);
+f32 math_dot_normalized_clamp(Vec3f *vec1, Vec3f *vec2);
 
 /*
  * Scales the length of a ray.
  *
  * The start pt remains the same, and the new end pt is written to `out_ray_end`.
  */
-void math_scale_ray(float scale, Vec3f *ray_start, Vec3f *ray_end, Vec3f *out_ray_end);
+void math_scale_ray(f32 scale, Vec3f *ray_start, Vec3f *ray_end, Vec3f *out_ray_end);
 
 /*
  * Sets the length of a vector.
  *
  * Vector with new length is written to `out_vec`.
  */
-void math_vec_set_length(float len, Vec3f *vec, Vec3f *out_vec);
+void math_vec_set_length(f32 len, Vec3f *vec, Vec3f *out_vec);
 
 /*
  * Normalizes a vector and returns its original length.
  */
-float math_vec_normalize_len(Vec3f *vec);
+f32 math_vec_normalize_len(Vec3f *vec);
 
 /*
  * Computes the dot product of the normals of two vectors.
  *
  * `vec1` and `vec2` need not be normal vectors themselves.
  */
-float math_dot_normalized(Vec3f *vec1, Vec3f *vec2);
+f32 math_dot_normalized(Vec3f *vec1, Vec3f *vec2);
+
+/*
+ * Sets Matrix A to the identity matrix.
+ */
+void math_set_mtxa_identity();
+
+/*
+ * Sets the passed matrix to the identity matrix.
+ */
+void math_set_mtx_identity(Mtx *mtx);
+
+// TODO
+void math_set_mtxa_identity_sq();
+
+// TODO
+void math_set_mtxa_translate_v(Vec3f *translate);
+
+// TODO
+void math_set_mtxa_translate(f32 x, f32 y, f32 z);
+
+/*
+ * Set Matrix A to a matrix representing an X rotation with the given angle.
+ */
+void math_set_mtxa_rotate_x(s16 angle);
+
+/*
+ * Set Matrix A to a matrix representing a Y rotation with the given angle.
+ */
+void math_set_mtxa_rotate_y(s16 angle);
+
+/*
+ * Set Matrix A to a matrix representing a Z rotation with the given angle.
+ */
+void math_set_mtxa_rotate_z(s16 angle);
+
+// TODO math_set_mtxa_translate_from_mtx_transform_..... two functions
 
 }

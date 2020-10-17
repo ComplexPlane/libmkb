@@ -33,12 +33,12 @@ s32 pool_alloc(PoolInfo *info, u8 status);
 // Delete all objects from the given pool
 void pool_clear(PoolInfo *info);
 
-extern Ball g_balls[MAX_BALLS];
-extern Item g_items[MAX_ITEMS];
-extern StageObject g_stobjs[MAX_STOBJS];
-extern Sprite g_sprites[MAX_SPRITES];
-extern Effect g_effects[MAX_EFFECTS];
-extern Camera g_cameras[MAX_CAMERAS];
+extern struct Ball g_balls[MAX_BALLS];
+extern struct Item g_items[MAX_ITEMS];
+extern struct StageObject g_stobjs[MAX_STOBJS];
+extern struct Sprite g_sprites[MAX_SPRITES];
+extern struct Effect g_effects[MAX_EFFECTS];
+extern struct Camera g_cameras[MAX_CAMERAS];
 
 extern u8 g_ball_status_list[MAX_BALLS];
 extern u8 g_item_status_list[MAX_ITEMS];
