@@ -39,7 +39,7 @@ static Mtx s_mtxb; // Matrix B
  * I don't know exactly how large the stack is in the locked cache in the original source.
  */
 static Mtx s_mtx_stack[128];
-static usize s_mtx_stack_ptr;
+static s32 s_mtx_stack_ptr = -1;
 
 /*
  * Eigen wrappers around Matrix A and Matrix B.
@@ -241,6 +241,151 @@ void math_set_mtxa_rotate_z(s16 angle)
 {
     s_eigen_mtxa *= Eigen::AngleAxis(s16_to_radians(angle), Eigen::Vector3f::UnitZ());
     copy_mtxa();
+}
+
+void mat_normalize_mtxa_quat()
+{
+    // TODO what does this even do??
+}
+
+void math_push_mtxa()
+{
+    memcpy(&s_mtx_stack[++s_mtx_stack_ptr], s_eigen_mtxa.data(), sizeof(Mtx));
+}
+
+void math_pop_mtxa()
+{
+    memcpy(s_eigen_mtxa.data(), &s_mtx_stack[s_mtx_stack_ptr--], sizeof(Mtx));
+    copy_mtxa();
+}
+
+void math_get_mtxa(Mtx *mtx)
+{
+    memcpy(mtx, s_eigen_mtxa.data(), sizeof(Mtx));
+}
+
+void math_set_mtxa(Mtx *mtx)
+{
+    memcpy(s_eigen_mtxa.data(), mtx, sizeof(Mtx));
+    copy_mtxa();
+}
+
+void math_peek_mtxa()
+{
+    memcpy(s_eigen_mtxa.data(), &s_mtx_stack[s_mtx_stack_ptr], sizeof(Mtx));
+    copy_mtxa();
+}
+
+void math_set_mtxa_mtxb()
+{
+    s_eigen_mtxa = s_eigen_mtxb;
+    copy_mtxa();
+}
+
+void math_set_mtxb_mtxa()
+{
+    s_eigen_mtxb = s_eigen_mtxa;
+    copy_mtxb();
+}
+
+void math_copy_mtx(Mtx *src, Mtx *dst)
+{
+    memcpy(dst, src, sizeof(Mtx));
+}
+
+void math_invert_mtxa()
+{
+    s_eigen_mtxa = s_eigen_mtxa.inverse();
+    copy_mtxa();
+}
+
+void math_transpose_mtxa()
+{
+    // TODO is this really transpose? How to transpose 3x4 matrix into a 3x4 matrix?
+}
+
+void math_mult_mtxa_right(Mtx *mtx)
+{
+    EigenMtx emtx;
+    memcpy(emtx.data(), mtx, sizeof(Mtx));
+    s_eigen_mtxa = s_eigen_mtxa * emtx;
+    copy_mtxa();
+}
+
+void math_mult_mtxa_left(Mtx *mtx)
+{
+    EigenMtx emtx;
+    memcpy(emtx.data(), mtx, sizeof(Mtx));
+    s_eigen_mtxa = emtx * s_eigen_mtxa;
+    copy_mtxa();
+}
+
+void math_set_mtxa_mtxb_mult_mtx(Mtx *mtx)
+{
+    EigenMtx emtx;
+    memcpy(emtx.data(), mtx, sizeof(Mtx));
+    s_eigen_mtxa = s_eigen_mtxb * emtx;
+    copy_mtxa();
+}
+
+void math_mult_mtx(Mtx *mtx1, Mtx *mtx2, Mtx *dst)
+{
+    EigenMtx emtx1, emtx2;
+    memcpy(emtx1.data(), mtx1, sizeof(Mtx));
+    memcpy(emtx2.data(), mtx2, sizeof(Mtx));
+    emtx1 = emtx1 * emtx2;
+    memcpy(dst, emtx1.data(), sizeof(Mtx));
+}
+
+void math_tf_point_by_mtxa_trans_v(Vec3f *point)
+{
+    EigenVec3fWrapper epoint((f32 *) point);
+    s_eigen_mtxa.translation() = s_eigen_mtxa * epoint;
+    copy_mtxa();
+}
+
+void math_tf_point_by_mtxa_trans(f32 x, f32 y, f32 z)
+{
+    Eigen::Vector3f epoint(x, y, z);
+    s_eigen_mtxa.translation() = s_eigen_mtxa * epoint;
+    copy_mtxa();
+}
+
+void math_inv_tf_point_by_mtxa_trans_v(Vec3f *point)
+{
+    // Faster way to do this with Eigen?
+    s_eigen_mtxa = s_eigen_mtxa.inverse() * EigenVec3fWrapper((f32 *) point);
+    copy_mtxa();
+}
+
+void math_inv_tf_point_by_mtxa_trans(f32 x, f32 y, f32 z)
+{
+    s_eigen_mtxa = s_eigen_mtxa.inverse() * Eigen::Vector3f(x, y, z);
+    copy_mtxa();
+}
+
+void math_scale_mtxa_sq_v(Vec3f *scale)
+{
+    math_scale_mtxa_sq(scale->x, scale->y, scale->z);
+}
+
+void math_scale_mtxa_sq(f32 x, f32 y, f32 z)
+{
+    s_eigen_mtxa(0, 0) *= x;
+    s_eigen_mtxa(1, 0) *= x;
+    s_eigen_mtxa(2, 0) *= x;
+    s_eigen_mtxa(0, 1) *= y;
+    s_eigen_mtxa(1, 1) *= y;
+    s_eigen_mtxa(2, 1) *= y;
+    s_eigen_mtxa(0, 2) *= z;
+    s_eigen_mtxa(1, 2) *= z;
+    s_eigen_mtxa(2, 2) *= z;
+    copy_mtxa();
+}
+
+void math_scale_mtxa_sq_s(f32 scale)
+{
+    math_scale_mtxa_sq(scale, scale, scale);
 }
 
 }
