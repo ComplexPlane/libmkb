@@ -8,7 +8,7 @@
 #include <Eigen/Dense>
 #include <cmath>
 
-// TODO implement the equivalent of floating-point condition register checks?
+// TODO implement the equivalent of f32ing-point condition register checks?
 
 namespace mkb2
 {
@@ -53,7 +53,7 @@ static EigenMtx s_eigen_mtxb;
 /*
  * Convert a s16 angle to radians.
  *
- * Not in the original source, only used here to help leverage standard library float-based math functions.
+ * Not in the original source, only used here to help leverage standard library f32-based math functions.
  */
 inline f64 s16_to_radians(s16 angle)
 {
@@ -63,7 +63,7 @@ inline f64 s16_to_radians(s16 angle)
 /*
  * Convert an angle in radians to a s16 angle.
  *
- * Not in the original source, only used here to help leverage standard library float-based math functions.
+ * Not in the original source, only used here to help leverage standard library f32-based math functions.
  */
 inline s16 radians_to_s16(f64 angle_rad)
 {
@@ -369,6 +369,11 @@ void math_scale_mtxa_sq_v(Vec3f *scale)
     math_scale_mtxa_sq(scale->x, scale->y, scale->z);
 }
 
+void math_scale_mtxa_sq_s(f32 scale)
+{
+    math_scale_mtxa_sq(scale, scale, scale);
+}
+
 void math_scale_mtxa_sq(f32 x, f32 y, f32 z)
 {
     s_eigen_mtxa(0, 0) *= x;
@@ -383,9 +388,113 @@ void math_scale_mtxa_sq(f32 x, f32 y, f32 z)
     copy_mtxa();
 }
 
-void math_scale_mtxa_sq_s(f32 scale)
+void math_tf_point_by_mtxa_v(Vec3f *src, Vec3f *dst)
 {
-    math_scale_mtxa_sq(scale, scale, scale);
+    math_tf_point_by_mtxa(src->x, src->y, src->z, dst);
+}
+
+void math_tf_vec_by_mtxa_v(Vec3f *src, Vec3f *dst)
+{
+    math_tf_vec_by_mtxa(src->x, src->y, src->z, dst);
+}
+
+void math_tf_point_by_mtxa(f32 x, f32 y, f32 z, Vec3f *dst)
+{
+    Eigen::Vector3f result = s_eigen_mtxa * Eigen::Vector3f(x, y, z);
+    dst->x = result.x();
+    dst->y = result.y();
+    dst->z = result.z();
+}
+
+void math_tf_vec_by_mtxa(f32 x, f32 y, f32 z, Vec3f *dst)
+{
+    Eigen::Vector3f result = s_eigen_mtxa.linear() * Eigen::Vector3f(x, y, z);
+    dst->x = result.x();
+    dst->y = result.y();
+    dst->z = result.z();
+}
+
+void math_mult_mtxa_by_rotate_x(s16 angle)
+{
+    s_eigen_mtxa *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitX());
+    copy_mtxa();
+}
+
+void math_mult_mtxa_by_rotate_y(s16 angle)
+{
+    s_eigen_mtxa *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitY());
+    copy_mtxa();
+}
+
+void math_mult_mtxa_by_rotate_z(s16 angle)
+{
+    s_eigen_mtxa *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitZ());
+    copy_mtxa();
+}
+
+void math_set_mtxa_rotate_quat(Quat *quat)
+{
+    s_eigen_mtxa = Eigen::Quaternionf((f32 *) quat);
+    copy_mtxa();
+}
+
+void math_mult_quat(Quat *dst, Quat *left, Quat *right)
+{
+    Eigen::Quaternionf result = Eigen::Quaternionf((f32* ) left) * Eigen::Quaternionf((f32 *) right);
+    dst->w = result.w();
+    dst->x = result.x();
+    dst->y = result.y();
+    dst->z = result.z();
+}
+
+void math_quat_from_mtxa(Quat *out_quat)
+{
+    Eigen::Quaternionf q(s_eigen_mtxa.rotation());
+    out_quat->w = q.w();
+    out_quat->x = q.x();
+    out_quat->y = q.y();
+    out_quat->z = q.z();
+}
+
+void math_quat_from_axis_angle(Quat *out_quat, Vec3f *axis, s16 angle)
+{
+    // Unnecessary to first convert it to an Eigen transform?
+    EigenMtx m(Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f((f32 *) axis)));
+    Eigen::Quaternionf q(m.rotation());
+    out_quat->w = q.w();
+    out_quat->x = q.x();
+    out_quat->y = q.y();
+    out_quat->z = q.z();
+}
+
+double math_quat_to_axis_angle(Quat *quat, Vec3f *out_axis)
+{
+    Eigen::Vector3f axis(quat->x, quat->y, quat->z);
+    axis.normalize();
+    out_axis->x = axis.x();
+    out_axis->y = axis.y();
+    out_axis->z = axis.z();
+    return 2.0 * acos(quat->w);
+}
+
+void math_normalize_quat(Quat *quat)
+{
+    Eigen::Quaternionf q((f32 *) quat);
+    q.normalize();
+    quat->w = q.w();
+    quat->x = q.x();
+    quat->y = q.y();
+    quat->z = q.z();
+}
+
+void math_quat_slerp(f32 t, Quat *dst, Quat *quat1, Quat *quat2)
+{
+    Eigen::Quaternionf q1((f32 *) quat1), q2((f32 *) quat2);
+    Eigen::Quaternionf result = q1.slerp(t, q2);
+    dst->w = result.w();
+    dst->x = result.x();
+    dst->y = result.y();
+    dst->z = result.z();
 }
 
 }

@@ -247,6 +247,11 @@ void math_inv_tf_point_by_mtxa_trans(f32 x, f32 y, f32 z);
 void math_scale_mtxa_sq_v(Vec3f *scale);
 
 /*
+ * Scale every value in the square part of Matrix A by `scale`.
+ */
+void math_scale_mtxa_sq_s(f32 scale);
+
+/*
  * Scale the square part of Matrix A by `x`, `y`, and `z` scales.
  *
  * The first, second, and third columns of Matrix A are scaled by
@@ -255,8 +260,101 @@ void math_scale_mtxa_sq_v(Vec3f *scale);
 void math_scale_mtxa_sq(f32 x, f32 y, f32 z);
 
 /*
- * Scale every value in the square part of Matrix A by `scale`.
+ * Transform a Vec3f point by Matrix A.
+ *
+ * `src` is the input point and `dst` is the resultant transformed point.
+ * Transform includes translation, unlike `math_tf_vec` variants.
  */
-void math_scale_mtxa_sq_s(f32 scale);
+void math_tf_point_by_mtxa_v(Vec3f *src, Vec3f *dst);
+
+/*
+ * Transform a Vec3f vector by Matrix A.
+ *
+ * `src` is the input vector and `dst` is the resultant transformed vector.
+ * Transforming a vector does not include translation, unlike transforming a point
+ * with `math_tf_point` variants.
+ */
+void math_tf_vec_by_mtxa_v(Vec3f *src, Vec3f *dst);
+
+/*
+ * Transform a (x, y, z) point by Matrix A.
+ *
+ * Transforming a point includes translation, unlike `math_tf_vec` variants.
+ */
+void math_tf_point_by_mtxa(f32 x, f32 y, f32 z, Vec3f *dst);
+
+/*
+ * Transform a (x, y, z) vector by Matrix A.
+ *
+ * Transforming a vector does not include translation, unlike transforming a point
+ * with `math_tf_point` variants.
+ */
+void math_tf_vec_by_mtxa(f32 x, f32 y, f32 z, Vec3f *dst);
+
+// TODO port the handful of "xz" whatever funcs
+
+/*
+ * Apply an X rotation to Matrix A.
+ *
+ * Equivalent to: mtxa = mtxa * xrotation(angle)
+ */
+void math_mult_mtxa_by_rotate_x(s16 angle);
+
+/*
+ * Apply a Y rotation to Matrix A.
+ *
+ * Equivalent to: mtxa = mtxa * yrotation(angle)
+ */
+void math_mult_mtxa_by_rotate_y(s16 angle);
+
+/*
+ * Apply a Z rotation to Matrix A.
+ *
+ * Equivalent to: mtxa = mtxa * zrotation(angle)
+ */
+void math_mult_mtxa_by_rotate_z(s16 angle);
+
+/*
+ * Initialize Matrix A from a rotation quaternion.
+ *
+ * Translation is set to 0.
+ */
+void math_set_mtxa_rotate_quat(Quat *quat);
+
+/*
+ * Multiply two quaternions.
+ *
+ * `left` is multiplied by `right` and the result is stored in `dst`.
+ */
+void math_mult_quat(Quat *dst, Quat *left, Quat *right);
+
+/*
+ * Initialize a rotation quaternion from Matrix A.
+ */
+void math_quat_from_mtxa(Quat *out_quat);
+
+/*
+ * Initialize a rotation quaternion from an axis and an angle.
+ */
+void math_quat_from_axis_angle(Quat *out_quat, Vec3f *axis, s16 angle);
+
+/*
+ * Extract the rotation axis and angle from a quaternion.
+ *
+ * Writes the axis to `out_axis` and returns the angle in radians.
+ */
+double math_quat_to_axis_angle(Quat *quat, Vec3f *out_axis);
+
+/*
+ * Normalize a quaternion.
+ */
+void math_normalize_quat(Quat *quat);
+
+/*
+ * Quaternion spherical linear interpolation.
+ */
+void math_quat_slerp(f32 t, Quat *dst, Quat *quat1, Quat *quat2);
+
+// TODO ray to euler functions
 
 }
