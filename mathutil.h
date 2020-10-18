@@ -51,9 +51,9 @@ void math_sin_cos_v(s16 angle, f32 *out_sin_cos);
 f32 math_tan(s16 angle);
 
 /*
- * Computes the four quadrant arctangent of `y` and `x` as a s16 angle.
+ * Computes the four quadrant arctangent of `x` and `y` as a s16 angle.
  */
-s16 math_atan2(f64 y, f64 x);
+s16 math_atan2(f64 x, f64 y);
 
 /*
  * Computes the arctangent of `x` as a s16 angle.
@@ -355,6 +355,38 @@ void math_normalize_quat(Quat *quat);
  */
 void math_quat_slerp(f32 t, Quat *dst, Quat *quat1, Quat *quat2);
 
-// TODO ray to euler functions
+/*
+ * Compute a Vec3s Euler rotation from a ray direction.
+ *
+ * The Z component of the rotation is always 0.
+ */
+void math_ray_to_euler(Vec3f *ray_start, Vec3f *ray_end, Vec3s *out_rot);
+
+/*
+ * Compute an x, y Euler rotation from a ray direction.
+ */
+void math_ray_to_euler_xy(Vec3f *ray_start, Vec3f *ray_end, s16 *out_rot_x, s16 *out_rot_y);
+
+/*
+ * Compute a Vec3s Euler rotation from a vector direction.
+ *
+ * The Z component of the rotation is always 0.
+ */
+void math_vec_to_euler(Vec3f *vec, Vec3s *out_rot);
+
+/*
+ * Compute an x, y Euler rotation from a vector direction.
+ */
+void math_vec_to_euler_xy(Vec3f *vec, s16 *out_rot_x, s16 *out_rot_y);
+
+/*
+ * Compute a y, x, z Euler rotation from Matrix A's rotation.
+ */
+void math_mtxa_to_euler(s16 *out_rot_y, s16 *out_rot_x, s16 *out_rot_z);
+
+/*
+ * Compute a Vec3f Euler rotation from Matrix A's rotation.
+ */
+void math_mtxa_to_euler_v(Vec3s *out_rot);
 
 }

@@ -129,7 +129,7 @@ f32 math_tan(s16 angle)
     return tan(s16_to_radians(angle));
 }
 
-s16 math_atan2(f64 y, f64 x)
+s16 math_atan2(f64 x, f64 y)
 {
     // TODO verify accuracy
     return radians_to_s16(atan2(y, x));
@@ -250,11 +250,17 @@ void mat_normalize_mtxa_quat()
 
 void math_push_mtxa()
 {
+    // Check does not appear in the original source
+    assert(s_mtx_stack_ptr < sizeof(s_mtx_stack) / sizeof(s_mtx_stack[0]));
+
     memcpy(&s_mtx_stack[++s_mtx_stack_ptr], s_eigen_mtxa.data(), sizeof(Mtx));
 }
 
 void math_pop_mtxa()
 {
+    // Check does not appear in the original source
+    assert(s_mtx_stack_ptr >= 0);
+
     memcpy(s_eigen_mtxa.data(), &s_mtx_stack[s_mtx_stack_ptr--], sizeof(Mtx));
     copy_mtxa();
 }
@@ -272,6 +278,9 @@ void math_set_mtxa(Mtx *mtx)
 
 void math_peek_mtxa()
 {
+    // Check does not appear in the original source
+    assert(s_mtx_stack_ptr >= 0);
+
     memcpy(s_eigen_mtxa.data(), &s_mtx_stack[s_mtx_stack_ptr], sizeof(Mtx));
     copy_mtxa();
 }
@@ -495,6 +504,65 @@ void math_quat_slerp(f32 t, Quat *dst, Quat *quat1, Quat *quat2)
     dst->x = result.x();
     dst->y = result.y();
     dst->z = result.z();
+}
+
+void math_ray_to_euler(Vec3f *ray_start, Vec3f *ray_end, Vec3s *out_rot)
+{
+    // The original game reimplements the logic here instead of calling `math_vec_to_euler()`
+   Vec3f vec = VEC_SUB(*ray_end, *ray_start);
+   math_vec_to_euler(&vec, out_rot);
+}
+
+void math_ray_to_euler_xy(Vec3f *ray_start, Vec3f *ray_end, s16 *out_rot_x, s16 *out_rot_y)
+{
+    // The original game reimplements the logic here instead of calling `math_vec_to_euler_xy()`
+    Vec3f vec = VEC_SUB(*ray_end, *ray_start);
+    math_vec_to_euler_xy(&vec, out_rot_x, out_rot_y);
+}
+
+void math_vec_to_euler(Vec3f *vec, Vec3s *out_rot)
+{
+    // The original game reimplements the logic here instead of calling `math_vec_to_euler_xy()`
+    math_vec_to_euler_xy(vec, &out_rot->x, &out_rot->y);
+    out_rot->z = 0.f;
+}
+
+void math_vec_to_euler_xy(Vec3f *vec, s16 *out_rot_x, s16 *out_rot_y)
+{
+    f32 len2d = math_sqrt(vec->x * vec->x + vec->z * vec->z);
+    *out_rot_y = math_atan2(vec->y, len2d);
+    *out_rot_x = math_atan2(-vec->x, -vec->z);
+}
+
+void math_mtxa_to_euler(s16 *out_rot_y, s16 *out_rot_x, s16 *out_rot_z)
+{
+    math_push_mtxa();
+
+    Vec3f forward = {0.f, 0.f, -1.f};
+    Vec3f up = {0.f, 1.f, 0.f};
+    math_tf_point_by_mtxa_v(&forward, &forward);
+    math_tf_point_by_mtxa_v(&up, &up);
+
+    f32 forward_len2d = math_sqrt(forward.x * forward.x + forward.z * forward.z);
+    *out_rot_x = math_atan2(forward.y, forward_len2d);
+    // Quick hack to add 180 degrees to the angle?
+    // Appears this was achieved in original source's `math_vec_to_euler_xy()` by
+    // negating both arguments to `math_atan2()`
+    *out_rot_y = math_atan2(forward.x, forward.z) + 0x8000;
+
+    // I think this undoes this X and Y rotation on the up vector, leaving only the Z rotation
+    math_set_mtxa_rotate_y(*out_rot_y);
+    math_mult_mtxa_by_rotate_x(*out_rot_x);
+    math_tf_point_xz_by_mtxa_v(&up, &up);
+    *out_rot_z = -math_atan2(up.x, up.y);
+
+    math_pop_mtxa();
+}
+
+void math_mtxa_to_euler_v(Vec3s *out_rot)
+{
+    // The original game reimplements the logic here instead of calling `math_mtxa_to_euler()`
+    math_mtxa_to_euler(&out_rot->y, &out_rot->x, &out_rot->z);
 }
 
 }
