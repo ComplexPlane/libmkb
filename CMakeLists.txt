@@ -6,11 +6,11 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(. dep/eigen-3.3.8)
 
 add_executable(libmkb
-        main.cpp
+        src/main.cpp
 #        lzload.cpp
-        pool.cpp 
+        src/pool.cpp
 #        stagedef_cnv.cpp
-        endian.cpp
-        mathutil.h
-        mathutil.cpp
-        vecutil.h)
+        src/endian.cpp
+        src/mathutil.h
+        src/mathutil.cpp
+        src/vecutil.h)

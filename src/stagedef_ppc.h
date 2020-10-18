@@ -1,6 +1,6 @@
 #pragma once
 
-#include <mathtypes.h>
+#include <src/mathtypes.h>
 
 /**
  * SMB2 Stage Definition (original PowerPC)
