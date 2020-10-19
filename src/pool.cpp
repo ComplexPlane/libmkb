@@ -18,6 +18,20 @@ Sprite g_sprites[MAX_SPRITES];
 Effect g_effects[MAX_EFFECTS];
 Camera g_cameras[MAX_CAMERAS];
 
+u8 g_ball_status_list[MAX_BALLS];
+u8 g_item_status_list[MAX_ITEMS];
+u8 g_stobj_status_list[MAX_STOBJS];
+u8 g_sprite_status_list[MAX_SPRITES];
+u8 g_effect_status_list[MAX_EFFECTS];
+u8 g_camera_status_list[MAX_CAMERAS];
+
+PoolInfo g_ball_pool_info;
+PoolInfo g_item_pool_info;
+PoolInfo g_stobj_pool_info;
+PoolInfo g_sprite_pool_info;
+PoolInfo g_effect_pool_info;
+PoolInfo g_camera_pool_info;
+
 void pool_init()
 {
     g_ball_pool_info.len = MAX_BALLS;

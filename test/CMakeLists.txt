@@ -1,0 +1,2 @@
+add_executable(libmkb_test_run mathutil_test.cpp catch_main.cpp)
+target_link_libraries(libmkb_test_run libmkb)

@@ -114,7 +114,7 @@ f32 math_sin(s16 angle)
 {
     // This is normally performed with a table lookup.
     // TODO verify accuracy
-    (f32) sin(s16_to_radians(angle));
+    return (f32) sin(s16_to_radians(angle));
 }
 
 void math_sin_cos_v(s16 angle, f32 *out_sin_cos)
@@ -206,13 +206,12 @@ void math_set_mtxa_identity()
 
 void math_set_mtx_identity(Mtx *mtx)
 {
-    EigenMtx emtx(EigenMtx::Identity());
-    memcpy(mtx, emtx.data(), sizeof(Mtx));
+    memcpy(mtx, EigenMtx::Identity().data(), sizeof(Mtx));
 }
 
 void math_set_mtxa_identity_sq()
 {
-    // TODO
+    // TODO what does this do?
 }
 
 void math_set_mtxa_translate_v(Vec3f *translate)
@@ -227,19 +226,19 @@ void math_set_mtxa_translate(f32 x, f32 y, f32 z)
 
 void math_set_mtxa_rotate_x(s16 angle)
 {
-    s_eigen_mtxa *= Eigen::AngleAxis(s16_to_radians(angle), Eigen::Vector3f::UnitX());
+    s_eigen_mtxa *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitX());
     copy_mtxa();
 }
 
 void math_set_mtxa_rotate_y(s16 angle)
 {
-    s_eigen_mtxa *= Eigen::AngleAxis(s16_to_radians(angle), Eigen::Vector3f::UnitY());
+    s_eigen_mtxa *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitY());
     copy_mtxa();
 }
 
 void math_set_mtxa_rotate_z(s16 angle)
 {
-    s_eigen_mtxa *= Eigen::AngleAxis(s16_to_radians(angle), Eigen::Vector3f::UnitZ());
+    s_eigen_mtxa *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitZ());
     copy_mtxa();
 }
 
@@ -363,13 +362,13 @@ void math_tf_point_by_mtxa_trans(f32 x, f32 y, f32 z)
 void math_inv_tf_point_by_mtxa_trans_v(Vec3f *point)
 {
     // Faster way to do this with Eigen?
-    s_eigen_mtxa = s_eigen_mtxa.inverse() * EigenVec3fWrapper((f32 *) point);
+    s_eigen_mtxa.translation() = s_eigen_mtxa.inverse() * Eigen::Vector3f((f32 *) point);
     copy_mtxa();
 }
 
 void math_inv_tf_point_by_mtxa_trans(f32 x, f32 y, f32 z)
 {
-    s_eigen_mtxa = s_eigen_mtxa.inverse() * Eigen::Vector3f(x, y, z);
+    s_eigen_mtxa.translation() = s_eigen_mtxa.inverse() * Eigen::Vector3f(x, y, z);
     copy_mtxa();
 }
 
@@ -421,6 +420,11 @@ void math_tf_vec_by_mtxa(f32 x, f32 y, f32 z, Vec3f *dst)
     dst->x = result.x();
     dst->y = result.y();
     dst->z = result.z();
+}
+
+void math_tf_point_xz_by_mtxa_v(Vec3f *src, Vec3f *dst)
+{
+    // TODO implement (also figure out what this even does)
 }
 
 void math_mult_mtxa_by_rotate_x(s16 angle)

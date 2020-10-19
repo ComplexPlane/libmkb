@@ -293,6 +293,8 @@ void math_tf_vec_by_mtxa(f32 x, f32 y, f32 z, Vec3f *dst);
 
 // TODO port the handful of "xz" whatever funcs
 
+void math_tf_point_xz_by_mtxa_v(Vec3f *src, Vec3f *dst);
+
 /*
  * Apply an X rotation to Matrix A.
  *
