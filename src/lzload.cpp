@@ -1,6 +1,6 @@
-#include "lzload.h"
+#include "../include/lzload.h"
 
-#include "stagedef.h"
+#include "../include/stagedef.h"
 
 #include <cstdint>
 #include <cstdio>

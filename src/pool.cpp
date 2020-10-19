@@ -1,12 +1,12 @@
-#include "pool.h"
+#include "../include/pool.h"
 
-#include "ball.h"
-#include "item.h"
-#include "stobj.h"
-#include "sprite.h"
-#include "effect.h"
-#include "camera.h"
-#include "event.h"
+#include "../include/ball.h"
+#include "../include/item.h"
+#include "../include/stobj.h"
+#include "../include/sprite.h"
+#include "../include/effect.h"
+#include "../include/camera.h"
+#include "../include/event.h"
 
 namespace mkb2
 {

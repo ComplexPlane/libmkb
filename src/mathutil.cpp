@@ -1,7 +1,7 @@
-#include "mathutil.h"
+#include "../include/mathutil.h"
 
-#include "mathtypes.h"
-#include "vecutil.h"
+#include "../include/mathtypes.h"
+#include "../include/vecutil.h"
 
 // It seems that _USE_MATH_DEFINES must be placed above Eigen includes for constants in cmath like M_PI to work
 #define _USE_MATH_DEFINES

@@ -1,8 +1,8 @@
-#include "stagedef_cnv.h"
+#include "../include/stagedef_cnv.h"
 
-#include "stagedef.h"
-#include "stagedef_ppc.h"
-#include "endian.h"
+#include "../include/stagedef.h"
+#include "../include/stagedef_ppc.h"
+#include "../include/endian.h"
 
 namespace mkb2
 {
