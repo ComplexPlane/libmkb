@@ -53,9 +53,9 @@ void math_sin_cos_v(s16 angle, f32 *out_sin_cos);
 f32 math_tan(s16 angle);
 
 /*
- * Computes the four quadrant arctangent of `x` and `y` as a s16 angle.
+ * Computes the four quadrant arctangent of `y` and `x` as a s16 angle.
  */
-s16 math_atan2(f64 x, f64 y);
+s16 math_atan2(f64 y, f64 x);
 
 /*
  * Computes the arctangent of `x` as a s16 angle.

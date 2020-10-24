@@ -128,7 +128,7 @@ f32 math_tan(s16 angle)
     return tan(s16_to_radians(angle));
 }
 
-s16 math_atan2(f64 x, f64 y)
+s16 math_atan2(f64 y, f64 x)
 {
     return radians_to_s16(atan2(y, x));
 }
