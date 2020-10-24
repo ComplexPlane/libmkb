@@ -1,4 +1,4 @@
-#include "../include/endian.h"
+#include "endian.h"
 
 namespace mkb2
 {

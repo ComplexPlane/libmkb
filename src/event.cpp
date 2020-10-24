@@ -1,4 +1,4 @@
-#include "../include/event.h"
+#include "event.h"
 
 namespace mkb2
 {

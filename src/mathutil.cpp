@@ -1,7 +1,7 @@
-#include "../include/mathutil.h"
+#include "mathutil.h"
 
-#include "../include/mathtypes.h"
-#include "../include/vecutil.h"
+#include "mathtypes.h"
+#include "vecutil.h"
 
 // It seems that _USE_MATH_DEFINES must be placed above Eigen includes for constants in cmath like M_PI to work
 #define _USE_MATH_DEFINES
@@ -113,7 +113,6 @@ f32 math_sqrt_rsqrt(f64 x, f32 *out_sqrt)
 f32 math_sin(s16 angle)
 {
     // This is normally performed with a table lookup.
-    // TODO verify accuracy
     return (f32) sin(s16_to_radians(angle));
 }
 
@@ -131,7 +130,6 @@ f32 math_tan(s16 angle)
 
 s16 math_atan2(f64 x, f64 y)
 {
-    // TODO verify accuracy
     return radians_to_s16(atan2(y, x));
 }
 

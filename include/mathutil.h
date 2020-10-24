@@ -5,6 +5,8 @@
 namespace mkb2
 {
 
+// TODO I believe what I call Euler rotations are not really Euler rotations. Come up with different names for these.
+
 /*
  * Initializes the math library.
  */

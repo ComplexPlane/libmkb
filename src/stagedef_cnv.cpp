@@ -1,8 +1,8 @@
-#include "../include/stagedef_cnv.h"
+#include "stagedef_cnv.h"
 
-#include "../include/stagedef.h"
-#include "../include/stagedef_ppc.h"
-#include "../include/endian.h"
+#include "stagedef.h"
+#include "stagedef_ppc.h"
+#include "endian.h"
 
 namespace mkb2
 {
@@ -29,9 +29,9 @@ public:
         return m_ppc_stagedef + big_to_native(offset);
     }
 
-    usize compute_sizes(StagedefFileHeaderPPC *ppc_stagedef)
+    u32 compute_sizes(StagedefFileHeaderPPC *ppc_stagedef)
     {
-        usize size = 0;
+        u32 size = 0;
 
         size += sizeof(StagedefFileHeader);
 
@@ -48,7 +48,7 @@ public:
                 size += sizeof(StagedefAnimHeader);
                 auto anim_header = (StagedefAnimHeaderPPC *) offset_to_ptr(coli_header->animation_header_offset);
 
-                usize total_keyframes = anim_header->rot_x_keyframe_count
+                u32 total_keyframes = anim_header->rot_x_keyframe_count
                                         + anim_header->rot_y_keyframe_count
                                         + anim_header->rot_z_keyframe_count
                                         + anim_header->pos_x_keyframe_count
@@ -83,7 +83,7 @@ public:
 private:
     StagedefFileHeaderPPC *m_ppc_stagedef;
     u32 m_num_tris = 0;
-    usize m_native_stagedef_size = 0;
+    u32 m_native_stagedef_size = 0;
 };
 
 StagedefFileHeader *stagedef_ppc_to_native(StagedefFileHeaderPPC *ppc_stagedef)
