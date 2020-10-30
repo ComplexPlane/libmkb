@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+ * Enums used in stagedefs, in a separate file so they can be
+ * shared between platform-independent stagedefs and powerpc stagedefs
+ */
+
 namespace mkb2
 {
 

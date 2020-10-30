@@ -1,13 +1,11 @@
 #pragma once
 
-#include <src/mathtypes.h>
-
-#include <cstdint>
+#include <mathtypes.h>
 
 namespace mkb2
 {
 
-/**
+/*
  * SMB2 Stage Definition (native)
  *
  * These structures denote a SMB2 stagedef in "native form", a.k.a. a form which is otherwise
@@ -96,10 +94,10 @@ struct StagedefBackgroundAnimHeader
 
 struct StagedefEffectHeader
 {
-    u32 fx_1_keyframe_count;
-    struct StagedefEffect1 *fx_1_keyframe_list;
-    u32 fx_2_keyframe_count;
-    struct StagedefEffect2 *fx_2_keyframe_list;
+    u32 fx1_keyframe_count;
+    struct StagedefEffect1 *fx1_keyframe_list;
+    u32 fx2_keyframe_count;
+    struct StagedefEffect2 *fx2_keyframe_list;
     struct StagedefTextureScroll *texture_scroll;
     u8 unk_0x14[28];
 };
@@ -138,7 +136,7 @@ struct StagedefBackgroundModel
     u8 padding[2];
     struct Vec3f scale;
     struct StagedefBackgroundAnimHeader *background_anim_header;
-    struct StagedefBackgroundAnim2Header *background_anim_2_header;
+    struct StagedefBackgroundAnim2Header *background_anim2_header;
     struct StagedefEffectHeader *effect_header;
 };
 

@@ -3,7 +3,7 @@
 namespace mkb2
 {
 
-struct StageObject
+struct Stobj
 {
 
 };

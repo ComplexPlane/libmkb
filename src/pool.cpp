@@ -1,63 +1,36 @@
 #include "pool.h"
 
-#include "ball.h"
-#include "item.h"
-#include "stobj.h"
-#include "sprite.h"
-#include "effect.h"
-#include "camera.h"
-#include "event.h"
+#include "global_state.h"
 
 namespace mkb2
 {
 
-Ball g_balls[MAX_BALLS];
-Item g_items[MAX_ITEMS];
-StageObject g_stobjs[MAX_STOBJS];
-Sprite g_sprites[MAX_SPRITES];
-Effect g_effects[MAX_EFFECTS];
-Camera g_cameras[MAX_CAMERAS];
-
-u8 g_ball_status_list[MAX_BALLS];
-u8 g_item_status_list[MAX_ITEMS];
-u8 g_stobj_status_list[MAX_STOBJS];
-u8 g_sprite_status_list[MAX_SPRITES];
-u8 g_effect_status_list[MAX_EFFECTS];
-u8 g_camera_status_list[MAX_CAMERAS];
-
-PoolInfo g_ball_pool_info;
-PoolInfo g_item_pool_info;
-PoolInfo g_stobj_pool_info;
-PoolInfo g_sprite_pool_info;
-PoolInfo g_effect_pool_info;
-PoolInfo g_camera_pool_info;
-
 void pool_init()
 {
-    g_ball_pool_info.len = MAX_BALLS;
-    g_ball_pool_info.status_list = g_ball_status_list;
+    gs->ball_pool_info.len = MAX_BALLS;
+    gs->ball_pool_info.status_list = gs->ball_status_list;
 
-    g_item_pool_info.len = MAX_ITEMS;
-    g_item_pool_info.status_list = g_item_status_list;
+    gs->item_pool_info.len = MAX_ITEMS;
+    gs->item_pool_info.status_list = gs->item_status_list;
 
-    g_stobj_pool_info.len = MAX_STOBJS;
-    g_stobj_pool_info.status_list = g_stobj_status_list;
+    gs->stobj_pool_info.len = MAX_STOBJS;
+    gs->stobj_pool_info.status_list = gs->stobj_status_list;
 
-    g_sprite_pool_info.len = MAX_SPRITES;
-    g_sprite_pool_info.status_list = g_sprite_status_list;
+    gs->sprite_pool_info.len = MAX_SPRITES;
+    gs->sprite_pool_info.status_list = gs->sprite_status_list;
 
-    g_effect_pool_info.len = MAX_EFFECTS;
-    g_effect_pool_info.status_list = g_effect_status_list;
+    gs->effect_pool_info.len = MAX_EFFECTS;
+    gs->effect_pool_info.status_list = gs->effect_status_list;
 
-    g_camera_pool_info.len = MAX_CAMERAS;
-    g_camera_pool_info.status_list = g_camera_status_list;
+    gs->camera_pool_info.len = MAX_CAMERAS;
+    gs->camera_pool_info.status_list = gs->camera_status_list;
 
-    pool_clear(&g_ball_pool_info);
-    pool_clear(&g_item_pool_info);
-    pool_clear(&g_stobj_pool_info);
-    pool_clear(&g_sprite_pool_info);
-    pool_clear(&g_effect_pool_info);
-    pool_clear(&g_camera_pool_info);
+    pool_clear(&gs->ball_pool_info);
+    pool_clear(&gs->item_pool_info);
+    pool_clear(&gs->stobj_pool_info);
+    pool_clear(&gs->sprite_pool_info);
+    pool_clear(&gs->effect_pool_info);
+    pool_clear(&gs->camera_pool_info);
 }
 
 static void pool_update_idxs(PoolInfo *info, s32 event_id_filter)
@@ -65,7 +38,7 @@ static void pool_update_idxs(PoolInfo *info, s32 event_id_filter)
     s32 new_low_free_idx = -1;
     u32 new_upper_bound = 0;
 
-    if (event_id_filter == EVENT_NONE || g_events[event_id_filter].status != STAT_NULL)
+    if (event_id_filter == EVENT_NONE || gs->events[event_id_filter].status != STAT_NULL)
     {
         for (u32 i = 0; i < info->len; i++)
         {
@@ -89,12 +62,12 @@ static void pool_update_idxs(PoolInfo *info, s32 event_id_filter)
 
 static void pool_update_idxs_of_all_pools()
 {
-    pool_update_idxs(&g_ball_pool_info, EVENT_NONE);
-    pool_update_idxs(&g_item_pool_info, EVENT_ITEM);
-    pool_update_idxs(&g_stobj_pool_info, EVENT_STOBJ);
-    pool_update_idxs(&g_sprite_pool_info, EVENT_SPRITE);
-    pool_update_idxs(&g_effect_pool_info, EVENT_EFFECT);
-    pool_update_idxs(&g_camera_pool_info, EVENT_CAMERA);
+    pool_update_idxs(&gs->ball_pool_info, EVENT_NONE);
+    pool_update_idxs(&gs->item_pool_info, EVENT_ITEM);
+    pool_update_idxs(&gs->stobj_pool_info, EVENT_STOBJ);
+    pool_update_idxs(&gs->sprite_pool_info, EVENT_SPRITE);
+    pool_update_idxs(&gs->effect_pool_info, EVENT_EFFECT);
+    pool_update_idxs(&gs->camera_pool_info, EVENT_CAMERA);
 }
 
 void pool_tick()

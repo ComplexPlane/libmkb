@@ -1,30 +1,58 @@
 #include <catch.hpp>
 
 #include "mathutil.h"
+#include "global_state.h"
 
 using namespace mkb2;
 
 // Useful for comparing exact floating-point values with the original game
-union uf32
+
+union Uf32
 {
     u32 u;
     f32 f;
 };
-union uf64
+
+union Uf64
 {
     u64 u;
     f64 f;
 };
-union ufarr32
+
+union Ufarr32
 {
     u32 u[2];
     f32 f[2];
 };
 
+union Ufmtx
+{
+    u32 u[12];
+    Mtx f;
+};
+
+void check_mtxa(const Ufmtx &ufmtx)
+{
+    CHECK(ufmtx.f[0][0] == Approx(gs->mtxa_raw[0][0]));
+    CHECK(ufmtx.f[0][1] == Approx(gs->mtxa_raw[0][1]));
+    CHECK(ufmtx.f[0][2] == Approx(gs->mtxa_raw[0][2]));
+    CHECK(ufmtx.f[0][3] == Approx(gs->mtxa_raw[0][3]));
+
+    CHECK(ufmtx.f[1][0] == Approx(gs->mtxa_raw[1][0]));
+    CHECK(ufmtx.f[1][1] == Approx(gs->mtxa_raw[1][1]));
+    CHECK(ufmtx.f[1][2] == Approx(gs->mtxa_raw[1][2]));
+    CHECK(ufmtx.f[1][3] == Approx(gs->mtxa_raw[1][3]));
+
+    CHECK(ufmtx.f[2][0] == Approx(gs->mtxa_raw[2][0]));
+    CHECK(ufmtx.f[2][1] == Approx(gs->mtxa_raw[2][1]));
+    CHECK(ufmtx.f[2][2] == Approx(gs->mtxa_raw[2][2]));
+    CHECK(ufmtx.f[2][3] == Approx(gs->mtxa_raw[2][3]));
+}
+
 TEST_CASE("math_sqrt()", "[mathutil]")
 {
-    uf64 a, b;
-    uf32 c, d, e, f;
+    Uf64 a, b;
+    Uf32 c, d, e, f;
 
     // Positive square-root
     a.u = 0x404d9f62d83c6c98;
@@ -37,8 +65,8 @@ TEST_CASE("math_sqrt()", "[mathutil]")
 
 TEST_CASE("math_rsqrt()", "[mathutil]")
 {
-    uf64 a, b;
-    uf32 c, d, e, f;
+    Uf64 a, b;
+    Uf32 c, d, e, f;
 
     // Positive values are correct
     a.u = 0x404d9f62d83c6c98;
@@ -53,8 +81,8 @@ TEST_CASE("math_rsqrt()", "[mathutil]")
 
 TEST_CASE("math_sqrt_rsqrt()", "[mathutil]")
 {
-    uf64 a, b;
-    uf32 c, d, e, f;
+    Uf64 a, b;
+    Uf32 c, d, e, f;
 
     // Positive input
     a.u = 0x404d9f62d83c6c98;
@@ -75,7 +103,7 @@ TEST_CASE("math_sqrt_rsqrt()", "[mathutil]")
 
 TEST_CASE("math_sin()", "[mathutil]")
 {
-    uf32 a, b;
+    Uf32 a, b;
     s16 angle;
 
     // math_sin
@@ -86,7 +114,7 @@ TEST_CASE("math_sin()", "[mathutil]")
 
 TEST_CASE("math_atan2()", "[mathutil]")
 {
-    uf64 a, b;
+    Uf64 a, b;
     s16 angle;
 
     angle = 0x2f80;
@@ -120,7 +148,7 @@ TEST_CASE("math_atan2()", "[mathutil]")
 
 TEST_CASE("math_sin_cos_v()", "[mathutil]")
 {
-    ufarr32 arr1, arr2;
+    Ufarr32 arr1, arr2;
     s16 angle;
 
     angle = 0x35a2;
@@ -129,4 +157,15 @@ TEST_CASE("math_sin_cos_v()", "[mathutil]")
     math_sin_cos_v(angle, arr1.f);
     CHECK(arr1.f[0] == Approx(arr2.f[0]));
     CHECK(arr1.f[0] == Approx(arr2.f[0]));
+}
+
+TEST_CASE("math_mtxa_from_identity()", "[mathutil]")
+{
+    math_mtxa_from_identity();
+    Ufmtx m = {
+        0x3f800000, 0x00000000, 0x00000000, 0x00000000,
+        0x00000000, 0x3f800000, 0x00000000, 0x00000000,
+        0x00000000, 0x00000000, 0x3f800000, 0x00000000
+    };
+    check_mtxa(m);
 }

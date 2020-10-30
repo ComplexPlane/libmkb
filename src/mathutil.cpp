@@ -1,12 +1,13 @@
 #include "mathutil.h"
 
+// Needed for M_PI and other constants from <cmath>
+#define _USE_MATH_DEFINES
+
+#include <Eigen/Dense>
+
 #include "mathtypes.h"
 #include "vecutil.h"
-
-// It seems that _USE_MATH_DEFINES must be placed above Eigen includes for constants in cmath like M_PI to work
-#define _USE_MATH_DEFINES
-#include <Eigen/Dense>
-#include <cmath>
+#include "global_state.h"
 
 // TODO implement the equivalent of f32ing-point condition register checks?
 
@@ -19,36 +20,71 @@ namespace mkb2
 using EigenMtx = Eigen::Transform<f32, 3, Eigen::AffineCompact, Eigen::RowMajor>;
 
 /*
- * Eigen vector map type used to wrap the game's Vec3f type.
- */
-using EigenVec3fWrapper = Eigen::Map<Eigen::Vector3f>;
-
-/*
- * Matrix A and Matrix B in the game's matrix format.
+ * Various helpers to convert between Eigen and the game's math types.
  *
- * Computations are performed on EigenMtx equivalents, but the result is coped to these native
- * matrices since the game reads them directly sometimes. If someone can figure out how to wrap
- * Eigen Transform matrices around these without needing to copy, feel free to fix it.
- */
-static Mtx s_mtxa; // Matrix A
-static Mtx s_mtxb; // Matrix B
-
-/*
- * The matrix stack.
- *
- * I don't know exactly how large the stack is in the locked cache in the original source.
- */
-static Mtx s_mtx_stack[128];
-static s32 s_mtx_stack_ptr = -1;
-
-/*
- * Eigen wrappers around Matrix A and Matrix B.
- *
- * Only for convenience, these don't exist in the game.
+ * Conversion performed by copying which is slow; if you find a better way, let me know.
  */
 
-static EigenMtx s_eigen_mtxa;
-static EigenMtx s_eigen_mtxb;
+inline EigenMtx emtx_from_mtxa()
+{
+    EigenMtx emtx;
+    memcpy(emtx.data(), gs->mtxa_raw, sizeof(Mtx));
+    return emtx;
+}
+
+inline void emtx_to_mtxa(const EigenMtx &emtx)
+{
+    memcpy(gs->mtxa_raw, emtx.data(), sizeof(Mtx));
+}
+
+inline EigenMtx emtx_from_mtxb()
+{
+    EigenMtx emtx;
+    memcpy(emtx.data(), gs->mtxb_raw, sizeof(Mtx));
+    return emtx;
+}
+
+inline void emtx_to_mtxb(const EigenMtx &emtx)
+{
+    memcpy(gs->mtxb_raw, emtx.data(), sizeof(Mtx));
+}
+
+inline EigenMtx emtx_from_mtx(Mtx *mtx)
+{
+    EigenMtx emtx;
+    memcpy(emtx.data(), mtx, sizeof(Mtx));
+    return emtx;
+}
+
+inline void emtx_to_mtx(const EigenMtx &emtx, Mtx *mtx)
+{
+    memcpy(mtx, emtx.data(), sizeof(Mtx));
+}
+
+inline Eigen::Vector3f evec_from_vec3f(Vec3f *vec)
+{
+   return Eigen::Vector3f((f32 *) vec);
+}
+
+inline void evec_to_vec3f(const Eigen::Vector3f &evec, Vec3f *vec)
+{
+    vec->x = evec.x();
+    vec->y = evec.y();
+    vec->z = evec.z();
+}
+
+inline Eigen::Quaternionf equat_from_quat(Quat *quat)
+{
+    return Eigen::Quaternionf((f32 *) quat);
+}
+
+inline void equat_to_quat(const Eigen::Quaternionf &equat, Quat *quat)
+{
+    quat->x = equat.x();
+    quat->y = equat.y();
+    quat->z = equat.z();
+    quat->w = equat.w();
+}
 
 /*
  * Convert a s16 angle to radians.
@@ -68,21 +104,6 @@ inline f64 s16_to_radians(s16 angle)
 inline s16 radians_to_s16(f64 angle_rad)
 {
     return angle_rad * 0x8000 / M_PI;
-}
-
-/*
- * Copies the Eigen Matrix A to the game's native Matrix A.
- *
- * Not necessary if someone figures out how to make Eigen Transform wrap
- * the game's Matrix A directly.
- */
-inline void copy_mtxa()
-{
-    memcpy(&s_mtxa, s_eigen_mtxa.data(), sizeof(Mtx));
-}
-inline void copy_mtxb()
-{
-    memcpy(&s_mtxb, s_eigen_mtxb.data(), sizeof(Mtx));
 }
 
 void math_init() {}
@@ -138,7 +159,7 @@ s16 math_atan(f64 x)
     return radians_to_s16(atan(x));
 }
 
-f32 math_dot_normalized_clamp(Vec3f *vec1, Vec3f *vec2)
+f32 math_vec_dot_normalized_clamp(Vec3f *vec1, Vec3f *vec2)
 {
     f32 dot = VEC_DOT(*vec1, *vec2);
     f32 len_sq_prod = VEC_LEN_SQ(*vec1) * VEC_LEN_SQ(*vec2);
@@ -151,7 +172,7 @@ f32 math_dot_normalized_clamp(Vec3f *vec1, Vec3f *vec2)
     return 0.f;
 }
 
-void math_scale_ray(f32 scale, Vec3f *ray_start, Vec3f *ray_end, Vec3f *out_ray_end)
+void math_ray_scale(f32 scale, Vec3f *ray_start, Vec3f *ray_end, Vec3f *out_ray_end)
 {
     Vec3f scaled_delta = VEC_SCALE(scale, VEC_SUB(*ray_end, *ray_start));
     *out_ray_end = VEC_ADD(*ray_start, scaled_delta);
@@ -196,48 +217,52 @@ f32 math_dot_normalized(Vec3f *vec1, Vec3f *vec2)
     return dot / denom;
 }
 
-void math_set_mtxa_identity()
+void math_mtxa_from_identity()
 {
-    s_eigen_mtxa.setIdentity();
-    copy_mtxa();
+    EigenMtx emtx(emtx_from_mtxa());
+    emtx.setIdentity();
+    emtx_to_mtxa(emtx);
 }
 
-void math_set_mtx_identity(Mtx *mtx)
+void math_mtx_from_identity(Mtx *mtx)
 {
     memcpy(mtx, EigenMtx::Identity().data(), sizeof(Mtx));
 }
 
-void math_set_mtxa_identity_sq()
+void math_mtxa_sq_from_identity()
 {
     // TODO what does this do?
 }
 
-void math_set_mtxa_translate_v(Vec3f *translate)
+void math_mtxa_tl_from_vec_v(Vec3f * translate)
 {
     // TODO
 }
 
-void math_set_mtxa_translate(f32 x, f32 y, f32 z)
+void math_mtxa_tl_from_vec(f32 x, f32 y, f32 z)
 {
     // TODO
 }
 
-void math_set_mtxa_rotate_x(s16 angle)
+void math_mtxa_from_rotate_x(s16 angle)
 {
-    s_eigen_mtxa *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitX());
-    copy_mtxa();
+    EigenMtx emtx(emtx_from_mtxa());
+    emtx *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitX());
+    emtx_to_mtxa(emtx);
 }
 
-void math_set_mtxa_rotate_y(s16 angle)
+void math_mtxa_from_rotate_y(s16 angle)
 {
-    s_eigen_mtxa *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitY());
-    copy_mtxa();
+    EigenMtx emtx(emtx_from_mtxa());
+    emtx *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitY());
+    emtx_to_mtxa(emtx);
 }
 
-void math_set_mtxa_rotate_z(s16 angle)
+void math_mtxa_from_rotate_z(s16 angle)
 {
-    s_eigen_mtxa *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitZ());
-    copy_mtxa();
+    EigenMtx emtx(emtx_from_mtxa());
+    emtx *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitZ());
+    emtx_to_mtxa(emtx);
 }
 
 void mat_normalize_mtxa_quat()
@@ -245,179 +270,149 @@ void mat_normalize_mtxa_quat()
     // TODO what does this even do??
 }
 
-void math_push_mtxa()
+void math_mtxa_push()
 {
     // Check does not appear in the original source
-    assert(s_mtx_stack_ptr < sizeof(s_mtx_stack) / sizeof(s_mtx_stack[0]));
+    assert(gs->mtx_stack_ptr < gs->mtx_stack);
 
-    memcpy(&s_mtx_stack[++s_mtx_stack_ptr], s_eigen_mtxa.data(), sizeof(Mtx));
+    memcpy(++gs->mtx_stack_ptr, &gs->mtxa_raw, sizeof(Mtx));
 }
 
-void math_pop_mtxa()
+void math_mtxa_pop()
 {
     // Check does not appear in the original source
-    assert(s_mtx_stack_ptr >= 0);
+    assert(gs->mtx_stack_ptr > gs->mtx_stack + MTX_STACK_SIZE);
 
-    memcpy(s_eigen_mtxa.data(), &s_mtx_stack[s_mtx_stack_ptr--], sizeof(Mtx));
-    copy_mtxa();
+    memcpy(&gs->mtxa_raw, gs->mtx_stack_ptr++, sizeof(Mtx));
 }
 
-void math_get_mtxa(Mtx *mtx)
+void math_mtxa_to_mtx(Mtx *mtx)
 {
-    memcpy(mtx, s_eigen_mtxa.data(), sizeof(Mtx));
+    memcpy(mtx, &gs->mtxa_raw, sizeof(Mtx));
 }
 
-void math_set_mtxa(Mtx *mtx)
+void math_mtxa_from_mtx(Mtx *mtx)
 {
-    memcpy(s_eigen_mtxa.data(), mtx, sizeof(Mtx));
-    copy_mtxa();
+    memcpy(&gs->mtxa_raw, mtx, sizeof(Mtx));
 }
 
-void math_peek_mtxa()
+void math_mtxa_peek()
 {
-    // Check does not appear in the original source
-    assert(s_mtx_stack_ptr >= 0);
-
-    memcpy(s_eigen_mtxa.data(), &s_mtx_stack[s_mtx_stack_ptr], sizeof(Mtx));
-    copy_mtxa();
+    memcpy(&gs->mtxa_raw, gs->mtx_stack_ptr, sizeof(Mtx));
 }
 
-void math_set_mtxa_mtxb()
+void math_mtxa_from_mtxb()
 {
-    s_eigen_mtxa = s_eigen_mtxb;
-    copy_mtxa();
+    memcpy(&gs->mtxa_raw, &gs->mtxb_raw, sizeof(Mtx));
 }
 
-void math_set_mtxb_mtxa()
+void math_mtxa_to_mtxb()
 {
-    s_eigen_mtxb = s_eigen_mtxa;
-    copy_mtxb();
+    memcpy(&gs->mtxb_raw, &gs->mtxa_raw, sizeof(Mtx));
 }
 
-void math_copy_mtx(Mtx *src, Mtx *dst)
+void math_mtx_copy(Mtx *src, Mtx *dst)
 {
     memcpy(dst, src, sizeof(Mtx));
 }
 
-void math_invert_mtxa()
+void math_mtxa_invert()
 {
-    s_eigen_mtxa = s_eigen_mtxa.inverse();
-    copy_mtxa();
+    emtx_to_mtxa(emtx_from_mtxa().inverse());
 }
 
-void math_transpose_mtxa()
+void math_mtxa_transpose()
 {
-    // TODO is this really transpose? How to transpose 3x4 matrix into a 3x4 matrix?
+    // TODO
 }
 
-void math_mult_mtxa_right(Mtx *mtx)
+void math_mtxa_mult_right(Mtx *mtx)
 {
-    EigenMtx emtx;
-    memcpy(emtx.data(), mtx, sizeof(Mtx));
-    s_eigen_mtxa = s_eigen_mtxa * emtx;
-    copy_mtxa();
+    emtx_to_mtxa(emtx_from_mtxa() * emtx_from_mtx(mtx));
 }
 
-void math_mult_mtxa_left(Mtx *mtx)
+void math_mtxa_mult_left(Mtx *mtx)
 {
-    EigenMtx emtx;
-    memcpy(emtx.data(), mtx, sizeof(Mtx));
-    s_eigen_mtxa = emtx * s_eigen_mtxa;
-    copy_mtxa();
+    emtx_to_mtxa(emtx_from_mtx(mtx) * emtx_from_mtxa());
 }
 
-void math_set_mtxa_mtxb_mult_mtx(Mtx *mtx)
+void math_mtxa_from_mtxb_mult_mtx(Mtx *mtx)
 {
-    EigenMtx emtx;
-    memcpy(emtx.data(), mtx, sizeof(Mtx));
-    s_eigen_mtxa = s_eigen_mtxb * emtx;
-    copy_mtxa();
+    emtx_to_mtxa(emtx_from_mtxb() * emtx_from_mtx(mtx));
 }
 
-void math_mult_mtx(Mtx *mtx1, Mtx *mtx2, Mtx *dst)
+void math_mtx_mult(Mtx *mtx1, Mtx *mtx2, Mtx *dst)
 {
-    EigenMtx emtx1, emtx2;
-    memcpy(emtx1.data(), mtx1, sizeof(Mtx));
-    memcpy(emtx2.data(), mtx2, sizeof(Mtx));
-    emtx1 = emtx1 * emtx2;
-    memcpy(dst, emtx1.data(), sizeof(Mtx));
+    emtx_to_mtx(emtx_from_mtx(mtx1) * emtx_from_mtx(mtx2), dst);
 }
 
-void math_tf_point_by_mtxa_trans_v(Vec3f *point)
+void math_mtxa_tl_from_mtxa_tf_point_v(Vec3f *point)
 {
-    EigenVec3fWrapper epoint((f32 *) point);
-    s_eigen_mtxa.translation() = s_eigen_mtxa * epoint;
-    copy_mtxa();
+    math_mtxa_tl_from_mtxa_tf_point(point->x, point->y, point->z);
 }
 
-void math_tf_point_by_mtxa_trans(f32 x, f32 y, f32 z)
+void math_mtxa_tl_from_mtxa_tf_point(f32 x, f32 y, f32 z)
 {
     Eigen::Vector3f epoint(x, y, z);
-    s_eigen_mtxa.translation() = s_eigen_mtxa * epoint;
-    copy_mtxa();
+    EigenMtx emtx(emtx_from_mtxa());
+    emtx.translation() = emtx * epoint;
+    emtx_to_mtxa(emtx);
 }
 
-void math_inv_tf_point_by_mtxa_trans_v(Vec3f *point)
+void math_mtxa_tl_from_mtxa_inv_tf_point_v(Vec3f *point)
 {
-    // Faster way to do this with Eigen?
-    s_eigen_mtxa.translation() = s_eigen_mtxa.inverse() * Eigen::Vector3f((f32 *) point);
-    copy_mtxa();
+    math_mtxa_tl_from_mtxa_inv_tf_point(point->x, point->y, point->z);
 }
 
-void math_inv_tf_point_by_mtxa_trans(f32 x, f32 y, f32 z)
+void math_mtxa_tl_from_mtxa_inv_tf_point(f32 x, f32 y, f32 z)
 {
-    s_eigen_mtxa.translation() = s_eigen_mtxa.inverse() * Eigen::Vector3f(x, y, z);
-    copy_mtxa();
+    Eigen::Vector3f epoint(x, y, z);
+    EigenMtx emtx(emtx_from_mtxa());
+    emtx.translation() = emtx.inverse() * epoint;
+    emtx_to_mtxa(emtx);
 }
 
-void math_scale_mtxa_sq_v(Vec3f *scale)
+void math_mtxa_mult_scale_v(Vec3f *scale)
 {
-    math_scale_mtxa_sq(scale->x, scale->y, scale->z);
+    math_mtxa_mult_scale(scale->x, scale->y, scale->z);
 }
 
-void math_scale_mtxa_sq_s(f32 scale)
+void math_mtxa_mult_scale_s(f32 scale)
 {
-    math_scale_mtxa_sq(scale, scale, scale);
+    math_mtxa_mult_scale(scale, scale, scale);
 }
 
-void math_scale_mtxa_sq(f32 x, f32 y, f32 z)
+void math_mtxa_mult_scale(f32 x, f32 y, f32 z)
 {
-    s_eigen_mtxa(0, 0) *= x;
-    s_eigen_mtxa(1, 0) *= x;
-    s_eigen_mtxa(2, 0) *= x;
-    s_eigen_mtxa(0, 1) *= y;
-    s_eigen_mtxa(1, 1) *= y;
-    s_eigen_mtxa(2, 1) *= y;
-    s_eigen_mtxa(0, 2) *= z;
-    s_eigen_mtxa(1, 2) *= z;
-    s_eigen_mtxa(2, 2) *= z;
-    copy_mtxa();
+    gs->mtxa_raw[0][0] *= x;
+    gs->mtxa_raw[1][0] *= x;
+    gs->mtxa_raw[2][0] *= x;
+    gs->mtxa_raw[0][1] *= y;
+    gs->mtxa_raw[1][1] *= y;
+    gs->mtxa_raw[2][1] *= y;
+    gs->mtxa_raw[0][2] *= z;
+    gs->mtxa_raw[1][2] *= z;
+    gs->mtxa_raw[2][2] *= z;
 }
 
-void math_tf_point_by_mtxa_v(Vec3f *src, Vec3f *dst)
+void math_mtxa_tf_point_v(Vec3f *src, Vec3f *dst)
 {
-    math_tf_point_by_mtxa(src->x, src->y, src->z, dst);
+    math_mtxa_tf_point(src->x, src->y, src->z, dst);
 }
 
-void math_tf_vec_by_mtxa_v(Vec3f *src, Vec3f *dst)
+void math_mtxa_tf_vec_v(Vec3f *src, Vec3f *dst)
 {
-    math_tf_vec_by_mtxa(src->x, src->y, src->z, dst);
+    math_mtxa_tf_vec(src->x, src->y, src->z, dst);
 }
 
-void math_tf_point_by_mtxa(f32 x, f32 y, f32 z, Vec3f *dst)
+void math_mtxa_tf_point(f32 x, f32 y, f32 z, Vec3f *dst)
 {
-    Eigen::Vector3f result = s_eigen_mtxa * Eigen::Vector3f(x, y, z);
-    dst->x = result.x();
-    dst->y = result.y();
-    dst->z = result.z();
+    evec_to_vec3f(emtx_from_mtxa() * Eigen::Vector3f(x, y, z), dst);
 }
 
-void math_tf_vec_by_mtxa(f32 x, f32 y, f32 z, Vec3f *dst)
+void math_mtxa_tf_vec(f32 x, f32 y, f32 z, Vec3f *dst)
 {
-    Eigen::Vector3f result = s_eigen_mtxa.linear() * Eigen::Vector3f(x, y, z);
-    dst->x = result.x();
-    dst->y = result.y();
-    dst->z = result.z();
+    evec_to_vec3f(emtx_from_mtxa().linear() * Eigen::Vector3f(x, y, z), dst);
 }
 
 void math_tf_point_xz_by_mtxa_v(Vec3f *src, Vec3f *dst)
@@ -425,87 +420,70 @@ void math_tf_point_xz_by_mtxa_v(Vec3f *src, Vec3f *dst)
     // TODO implement (also figure out what this even does)
 }
 
-void math_mult_mtxa_by_rotate_x(s16 angle)
+void math_mtxa_mult_rotate_x(s16 angle)
 {
-    s_eigen_mtxa *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitX());
-    copy_mtxa();
+    emtx_to_mtxa(emtx_from_mtxa() * Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitX()));
 }
 
-void math_mult_mtxa_by_rotate_y(s16 angle)
+void math_mtxa_mult_rotate_y(s16 angle)
 {
-    s_eigen_mtxa *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitY());
-    copy_mtxa();
+    emtx_to_mtxa(emtx_from_mtxa() * Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitY()));
 }
 
-void math_mult_mtxa_by_rotate_z(s16 angle)
+void math_mtxa_mult_rotate_z(s16 angle)
 {
-    s_eigen_mtxa *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitZ());
-    copy_mtxa();
+    emtx_to_mtxa(emtx_from_mtxa() * Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitZ()));
 }
 
-void math_set_mtxa_rotate_quat(Quat *quat)
+void math_mtxa_from_quat(Quat *quat)
 {
-    s_eigen_mtxa = Eigen::Quaternionf((f32 *) quat);
-    copy_mtxa();
+    emtx_to_mtxa(EigenMtx(Eigen::Quaternionf((f32 *) quat)));
 }
 
-void math_mult_quat(Quat *dst, Quat *left, Quat *right)
+void math_quat_mult(Quat *dst, Quat *left, Quat *right)
 {
-    Eigen::Quaternionf result = Eigen::Quaternionf((f32* ) left) * Eigen::Quaternionf((f32 *) right);
-    dst->w = result.w();
-    dst->x = result.x();
-    dst->y = result.y();
-    dst->z = result.z();
+    equat_to_quat(equat_from_quat(left) * equat_from_quat(right), dst);
 }
 
-void math_quat_from_mtxa(Quat *out_quat)
+void math_mtxa_to_quat(Quat *out_quat)
 {
-    Eigen::Quaternionf q(s_eigen_mtxa.rotation());
-    out_quat->w = q.w();
-    out_quat->x = q.x();
-    out_quat->y = q.y();
-    out_quat->z = q.z();
+    equat_to_quat(Eigen::Quaternionf(emtx_from_mtxa().rotation()), out_quat);
 }
 
 void math_quat_from_axis_angle(Quat *out_quat, Vec3f *axis, s16 angle)
 {
     // Unnecessary to first convert it to an Eigen transform?
     EigenMtx m(Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f((f32 *) axis)));
-    Eigen::Quaternionf q(m.rotation());
-    out_quat->w = q.w();
-    out_quat->x = q.x();
-    out_quat->y = q.y();
-    out_quat->z = q.z();
+    equat_to_quat(Eigen::Quaternionf(m.rotation()), out_quat);
 }
 
 double math_quat_to_axis_angle(Quat *quat, Vec3f *out_axis)
 {
     Eigen::Vector3f axis(quat->x, quat->y, quat->z);
     axis.normalize();
-    out_axis->x = axis.x();
-    out_axis->y = axis.y();
-    out_axis->z = axis.z();
+    evec_to_vec3f(axis, out_axis);
     return 2.0 * acos(quat->w);
 }
 
-void math_normalize_quat(Quat *quat)
+void math_quat_normalize(Quat *quat)
 {
-    Eigen::Quaternionf q((f32 *) quat);
-    q.normalize();
-    quat->w = q.w();
-    quat->x = q.x();
-    quat->y = q.y();
-    quat->z = q.z();
+    equat_to_quat(equat_from_quat(quat).normalized(), quat);
+}
+
+void math_quat_from_vecs(Quat *out_quat, Vec3f *start, Vec3f *end)
+{
+    Eigen::Vector3f estart((f32 *) start);
+    Eigen::Vector3f eend((f32 *) end);
+    Eigen::Quaternionf q(Eigen::Quaternionf::FromTwoVectors(estart, eend));
+    equat_to_quat(q, out_quat);
 }
 
 void math_quat_slerp(f32 t, Quat *dst, Quat *quat1, Quat *quat2)
 {
-    Eigen::Quaternionf q1((f32 *) quat1), q2((f32 *) quat2);
+    Eigen::Quaternionf q1(equat_from_quat(quat1));
+    Eigen::Quaternionf q2(equat_from_quat(quat2));
     Eigen::Quaternionf result = q1.slerp(t, q2);
-    dst->w = result.w();
-    dst->x = result.x();
-    dst->y = result.y();
-    dst->z = result.z();
+    equat_to_quat(result, dst);
 }
 
 void math_ray_to_euler(Vec3f *ray_start, Vec3f *ray_end, Vec3s *out_rot)
@@ -538,12 +516,12 @@ void math_vec_to_euler_xy(Vec3f *vec, s16 *out_rot_x, s16 *out_rot_y)
 
 void math_mtxa_to_euler(s16 *out_rot_y, s16 *out_rot_x, s16 *out_rot_z)
 {
-    math_push_mtxa();
+    math_mtxa_push();
 
     Vec3f forward = {0.f, 0.f, -1.f};
     Vec3f up = {0.f, 1.f, 0.f};
-    math_tf_point_by_mtxa_v(&forward, &forward);
-    math_tf_point_by_mtxa_v(&up, &up);
+    math_mtxa_tf_point_v(&forward, &forward);
+    math_mtxa_tf_point_v(&up, &up);
 
     f32 forward_len2d = math_sqrt(forward.x * forward.x + forward.z * forward.z);
     *out_rot_x = math_atan2(forward.y, forward_len2d);
@@ -553,12 +531,12 @@ void math_mtxa_to_euler(s16 *out_rot_y, s16 *out_rot_x, s16 *out_rot_z)
     *out_rot_y = math_atan2(forward.x, forward.z) + 0x8000;
 
     // I think this undoes this X and Y rotation on the up vector, leaving only the Z rotation
-    math_set_mtxa_rotate_y(*out_rot_y);
-    math_mult_mtxa_by_rotate_x(*out_rot_x);
+    math_mtxa_from_rotate_y(*out_rot_y);
+    math_mtxa_mult_rotate_x(*out_rot_x);
     math_tf_point_xz_by_mtxa_v(&up, &up);
     *out_rot_z = -math_atan2(up.x, up.y);
 
-    math_pop_mtxa();
+    math_mtxa_pop();
 }
 
 void math_mtxa_to_euler_v(Vec3s *out_rot)

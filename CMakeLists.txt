@@ -11,6 +11,8 @@ add_library(libmkb
 #        stagedef_cnv.cpp
         src/endian.cpp
         src/mathutil.cpp
-        src/event.cpp)
+        src/event.cpp
+        src/global_state.cpp
+        )
 
 add_subdirectory(test)

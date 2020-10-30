@@ -61,6 +61,4 @@ struct Event
     u32 tick_time; /* For performance metrics (presumably this is what's seen in the debug overlay performance > event menu) */
 };
 
-extern Event g_events[NUM_EVENTS];
-
 }

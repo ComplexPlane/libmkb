@@ -1,6 +1,6 @@
 #pragma once
 
-/**
+/*
  * Convert an original Gamecube PowerPC stagedef binary to a native stagedef
  */
 

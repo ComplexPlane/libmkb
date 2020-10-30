@@ -97,10 +97,10 @@ static_assert(sizeof(StagedefBackgroundAnimHeaderPPC) == 0x50);
 
 struct StagedefEffectHeaderPPC
 {
-    u32 fx_1_keyframe_count;
-    u32 fx_1_keyframe_list_offset;
-    u32 fx_2_keyframe_count;
-    u32 fx_2_keyframe_list_offset;
+    u32 fx1_keyframe_count;
+    u32 fx1_keyframe_list_offset;
+    u32 fx2_keyframe_count;
+    u32 fx2_keyframe_list_offset;
     u32 texture_scroll_offset;
     u8 unk_0x14[28];
 } __attribute__((__packed__));
@@ -147,7 +147,7 @@ struct StagedefBackgroundModelPPC
     u8 padding[2];
     struct Vec3f scale;
     u32 background_anim_header_offset;
-    u32 background_anim_2_header_offset;
+    u32 background_anim2_header_offset;
     u32 effect_header_offset;
 } __attribute__((__packed__));
 

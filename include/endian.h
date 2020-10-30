@@ -1,6 +1,6 @@
 #pragma once
 
-/**
+/*
  * Endianness conversion utilities.
  *
  * These are only for mediating between PowerPC and native types in this codebase;
