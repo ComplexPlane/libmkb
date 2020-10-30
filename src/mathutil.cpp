@@ -63,7 +63,7 @@ inline void emtx_to_mtx(const EigenMtx &emtx, Mtx *mtx)
 
 inline Eigen::Vector3f evec_from_vec3f(Vec3f *vec)
 {
-   return Eigen::Vector3f((f32 *) vec);
+    return Eigen::Vector3f((f32 *) vec);
 }
 
 inline void evec_to_vec3f(const Eigen::Vector3f &evec, Vec3f *vec)
@@ -234,7 +234,7 @@ void math_mtxa_sq_from_identity()
     // TODO what does this do?
 }
 
-void math_mtxa_tl_from_vec_v(Vec3f * translate)
+void math_mtxa_tl_from_vec_v(Vec3f *translate)
 {
     // TODO
 }
@@ -246,22 +246,19 @@ void math_mtxa_tl_from_vec(f32 x, f32 y, f32 z)
 
 void math_mtxa_from_rotate_x(s16 angle)
 {
-    EigenMtx emtx(emtx_from_mtxa());
-    emtx *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitX());
+    EigenMtx emtx(Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitX()));
     emtx_to_mtxa(emtx);
 }
 
 void math_mtxa_from_rotate_y(s16 angle)
 {
-    EigenMtx emtx(emtx_from_mtxa());
-    emtx *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitY());
+    EigenMtx emtx(Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitY()));
     emtx_to_mtxa(emtx);
 }
 
 void math_mtxa_from_rotate_z(s16 angle)
 {
-    EigenMtx emtx(emtx_from_mtxa());
-    emtx *= Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitZ());
+    EigenMtx emtx(Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitZ()));
     emtx_to_mtxa(emtx);
 }
 
@@ -489,8 +486,8 @@ void math_quat_slerp(f32 t, Quat *dst, Quat *quat1, Quat *quat2)
 void math_ray_to_euler(Vec3f *ray_start, Vec3f *ray_end, Vec3s *out_rot)
 {
     // The original game reimplements the logic here instead of calling `math_vec_to_euler()`
-   Vec3f vec = VEC_SUB(*ray_end, *ray_start);
-   math_vec_to_euler(&vec, out_rot);
+    Vec3f vec = VEC_SUB(*ray_end, *ray_start);
+    math_vec_to_euler(&vec, out_rot);
 }
 
 void math_ray_to_euler_xy(Vec3f *ray_start, Vec3f *ray_end, s16 *out_rot_x, s16 *out_rot_y)
