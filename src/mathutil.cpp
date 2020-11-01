@@ -159,17 +159,17 @@ s16 math_atan(f64 x)
     return radians_to_s16(atan(x));
 }
 
-f32 math_vec_dot_normalized_clamp(Vec3f *vec1, Vec3f *vec2)
+f32 math_vec_dot_normalized_safe(Vec3f *vec1, Vec3f *vec2)
 {
-    f32 dot = VEC_DOT(*vec1, *vec2);
-    f32 len_sq_prod = VEC_LEN_SQ(*vec1) * VEC_LEN_SQ(*vec2);
+    f32 len1_sq = VEC_LEN_SQ(*vec1);
+    f32 len2_sq = VEC_LEN_SQ(*vec2);
+    if (len1_sq == INFINITY || len2_sq == INFINITY) return INFINITY;
 
-    if (dot > 0.f)
-    {
-        f32 denom = math_rsqrt(len_sq_prod);
-        return dot / denom;
-    }
-    return 0.f;
+    f32 dot = VEC_DOT(*vec1, *vec2);
+    if (dot == 0.f) return 0.f;
+
+    f32 inv_len_prod = math_rsqrt(len1_sq * len2_sq);
+    return dot * inv_len_prod;
 }
 
 void math_ray_scale(f32 scale, Vec3f *ray_start, Vec3f *ray_end, Vec3f *out_ray_end)
@@ -209,12 +209,12 @@ f32 math_vec_normalize_len(Vec3f *vec)
     return 0.f;
 }
 
-f32 math_dot_normalized(Vec3f *vec1, Vec3f *vec2)
+f32 math_vec_dot_normalized(Vec3f *vec1, Vec3f *vec2)
 {
     f32 dot = VEC_DOT(*vec1, *vec2);
     f32 len_sq_prod = VEC_LEN_SQ(*vec1) * VEC_LEN_SQ(*vec2);
-    f32 denom = math_rsqrt(len_sq_prod);
-    return dot / denom;
+    f32 inv_len_prod = math_rsqrt(len_sq_prod);
+    return dot * inv_len_prod;
 }
 
 void math_mtxa_from_identity()
@@ -231,7 +231,11 @@ void math_mtx_from_identity(Mtx *mtx)
 
 void math_mtxa_sq_from_identity()
 {
-    // TODO what does this do?
+    EigenMtx emtx(emtx_from_mtxa());
+    Eigen::Vector3f tl = emtx.translation();
+    emtx.setIdentity();
+    emtx.translation() = tl;
+    emtx_to_mtxa(emtx);
 }
 
 void math_mtxa_tl_from_vec_v(Vec3f *translate)

@@ -7,6 +7,12 @@ using namespace mkb2;
 
 // Useful for comparing exact floating-point values with the original game
 
+union Uf
+{
+    u32 u;
+    f32 f;
+};
+
 union Uf32
 {
     u32 u;
@@ -29,6 +35,12 @@ union Ufmtx
 {
     u32 u[12];
     Mtx f;
+};
+
+union Ufvec
+{
+    u32 u[3];
+    Vec3f f;
 };
 
 void check_mtxa(const Ufmtx &ufmtx)
@@ -198,6 +210,68 @@ TEST_CASE("math_sin_cos_v()", "[mathutil]")
     CHECK(arr1.f[0] == Approx(arr2.f[0]));
 }
 
+TEST_CASE("math_vec_dot_normalized_*()", "[mathutil]")
+{
+    Ufvec vec1, vec2, vec3, vec4, vec5;
+    vec1.f = {-0.5f, -1.f, 0.3};
+    vec2.f = {-0.25f, -1.83f, 2.032f};
+    vec3.f = {0.25f, 1.83f, -2.032f};
+    vec4.f = {0.f, 0.f, 0.f};
+    vec5.f = {INFINITY, 0.5, -INFINITY};
+
+    Uf result, expected;
+
+    result.f = math_vec_dot_normalized_safe(&vec1.f, &vec2.f);
+    expected.u = 0x3f4e8add;
+    CHECK(result.f == Approx(expected.f));
+
+    result.f = math_vec_dot_normalized_safe(&vec1.f, &vec3.f);
+    expected.u = 0xbf4e8add;
+    CHECK(result.f == Approx(expected.f));
+
+    result.f = math_vec_dot_normalized_safe(&vec1.f, &vec4.f);
+    expected.u = 0x00000000;
+    CHECK(result.f == Approx(expected.f));
+
+    result.f = math_vec_dot_normalized_safe(&vec1.f, &vec5.f);
+    expected.u = 0x7f800000;
+    CHECK(result.f == Approx(expected.f));
+
+    result.f = math_vec_dot_normalized_safe(&vec4.f, &vec4.f);
+    expected.u = 0x00000000;
+    CHECK(result.f == Approx(expected.f));
+
+    result.f = math_vec_dot_normalized(&vec1.f, &vec2.f);
+    expected.u = 0x3f4e8add;
+    CHECK(result.f == Approx(expected.f));
+
+    result.f = math_vec_dot_normalized(&vec1.f, &vec3.f);
+    expected.u = 0xbf4e8add;
+    CHECK(result.f == Approx(expected.f));
+
+    result.f = math_vec_dot_normalized(&vec1.f, &vec4.f);
+    expected.u = 0xffc00000;
+    CHECK(isnan(result.f));
+
+    result.f = math_vec_dot_normalized(&vec1.f, &vec5.f);
+    expected.u = 0xffc00000;
+    CHECK(isnan(result.f));
+
+    result.f = math_vec_dot_normalized(&vec4.f, &vec4.f);
+    expected.u = 0xffc00000;
+    CHECK(isnan(result.f));
+}
+
+TEST_CASE("math_ray_scale()", "[mathutil]")
+{
+    // TODO
+}
+
+TEST_CASE("math_vec_normalize_len()", "[mathutil]")
+{
+    // TODO
+}
+
 TEST_CASE("math_mtxa_from_identity()", "[mathutil]")
 {
     load_dummy_mtxa();
@@ -208,6 +282,16 @@ TEST_CASE("math_mtxa_from_identity()", "[mathutil]")
         0x00000000, 0x00000000, 0x3f800000, 0x00000000
     };
     check_mtxa(m);
+}
+
+TEST_CASE("math_mtx_from_identity()", "[mathutil]")
+{
+    // TODO
+}
+
+TEST_CASE("math_mtxa_sq_from_identity()", "[mathutil]")
+{
+    // TODO
 }
 
 TEST_CASE("math_mtxa_from_rotate_x()", "[mathutil]")

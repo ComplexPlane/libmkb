@@ -61,11 +61,13 @@ s16 math_atan2(f64 y, f64 x);
 s16 math_atan(f64 x);
 
 /*
- * Computes the dot product of the normals of two vectors, clamped to [0.f, 1.f].
+ * Computes the dot product of the normals of two vectors.
  *
  * `vec1` and `vec2` need not be normal vectors themselves.
+ * This is the safe version; if a vector is zero then 0.f will be returned,
+ * and if a vector has a component of INFINITY, then INFINITY will be returned.
  */
-f32 math_vec_dot_normalized_clamp(Vec3f *vec1, Vec3f *vec2);
+f32 math_vec_dot_normalized_safe(Vec3f *vec1, Vec3f *vec2);
 
 /*
  * Scales the length of a ray.
@@ -90,6 +92,8 @@ f32 math_vec_normalize_len(Vec3f *vec);
  * Computes the dot product of the normals of two vectors.
  *
  * `vec1` and `vec2` need not be normal vectors themselves.
+ * This is the unsafe version; if either vector is zero or has a component of INFINITY,
+ * NAN will be returned.
  */
 f32 math_vec_dot_normalized(Vec3f *vec1, Vec3f *vec2);
 
@@ -99,11 +103,13 @@ f32 math_vec_dot_normalized(Vec3f *vec1, Vec3f *vec2);
 void math_mtxa_from_identity();
 
 /*
- * Sets the passed matrix to the identity matrix.
+ * Sets the passed matrix to the identity matrix, zeroing the translation column.
  */
 void math_mtx_from_identity(Mtx *mtx);
 
-// TODO
+/*
+ * Sets the square part of Matrix A to the identity matrix (preserving translation).
+ */
 void math_mtxa_sq_from_identity();
 
 // TODO
@@ -143,7 +149,7 @@ void math_mtxa_push();
 void math_mtxa_pop();
 
 /*
- * Copy the topmost matrix on the matrix stack into Matrix A.
+ * Copy the top-most matrix on the matrix stack into Matrix A.
  */
 void math_mtxa_peek();
 
