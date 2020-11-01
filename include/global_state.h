@@ -24,8 +24,8 @@ namespace mkb2
  * If you can think of a better way to achieve instancing, then let me know.
  */
 
-// Actual size currently unknown
-constexpr u32 MTX_STACK_SIZE = 128;
+// Number of matrices on the matrix stack, actual size currently unknown
+constexpr u32 MTX_STACK_LEN = 128;
 
 // TODO order data in MKB2 memory order and label memory addresses
 struct GlobalState
@@ -62,8 +62,8 @@ struct GlobalState
 
     Mtx mtxa_raw;
     Mtx mtxb_raw;
-    Mtx mtx_stack[MTX_STACK_SIZE]; // Location in locked cache currently unknown
-    Mtx *mtx_stack_ptr = mtx_stack + MTX_STACK_SIZE;
+    Mtx mtx_stack[MTX_STACK_LEN]; // Location in locked cache currently unknown
+    Mtx *mtx_stack_ptr = mtx_stack + MTX_STACK_LEN;
 };
 
 /*

@@ -43,22 +43,57 @@ union Ufvec
     Vec3f f;
 };
 
+void check_mtx(const Mtx *result, const Mtx *expected)
+{
+    CHECK((*result)[0][0] == Approx((*expected)[0][0]));
+    CHECK((*result)[0][1] == Approx((*expected)[0][1]));
+    CHECK((*result)[0][2] == Approx((*expected)[0][2]));
+    CHECK((*result)[0][3] == Approx((*expected)[0][3]));
+
+    CHECK((*result)[1][0] == Approx((*expected)[1][0]));
+    CHECK((*result)[1][1] == Approx((*expected)[1][1]));
+    CHECK((*result)[1][2] == Approx((*expected)[1][2]));
+    CHECK((*result)[1][3] == Approx((*expected)[1][3]));
+
+    CHECK((*result)[2][0] == Approx((*expected)[2][0]));
+    CHECK((*result)[2][1] == Approx((*expected)[2][1]));
+    CHECK((*result)[2][2] == Approx((*expected)[2][2]));
+    CHECK((*result)[2][3] == Approx((*expected)[2][3]));
+}
+
 void check_mtxa(const Ufmtx &ufmtx)
 {
-    CHECK(ufmtx.f[0][0] == Approx(gs->mtxa_raw[0][0]));
-    CHECK(ufmtx.f[0][1] == Approx(gs->mtxa_raw[0][1]));
-    CHECK(ufmtx.f[0][2] == Approx(gs->mtxa_raw[0][2]));
-    CHECK(ufmtx.f[0][3] == Approx(gs->mtxa_raw[0][3]));
+    check_mtx(&gs->mtxa_raw, &ufmtx.f);
+}
 
-    CHECK(ufmtx.f[1][0] == Approx(gs->mtxa_raw[1][0]));
-    CHECK(ufmtx.f[1][1] == Approx(gs->mtxa_raw[1][1]));
-    CHECK(ufmtx.f[1][2] == Approx(gs->mtxa_raw[1][2]));
-    CHECK(ufmtx.f[1][3] == Approx(gs->mtxa_raw[1][3]));
+void check_vec3f(Vec3f *result, Vec3f *expected)
+{
+    if (isnan(expected->x))
+    {
+        CHECK(isnan(result->x));
+    }
+    else
+    {
+        CHECK(result->x == Approx(expected->x));
+    }
 
-    CHECK(ufmtx.f[2][0] == Approx(gs->mtxa_raw[2][0]));
-    CHECK(ufmtx.f[2][1] == Approx(gs->mtxa_raw[2][1]));
-    CHECK(ufmtx.f[2][2] == Approx(gs->mtxa_raw[2][2]));
-    CHECK(ufmtx.f[2][3] == Approx(gs->mtxa_raw[2][3]));
+    if (isnan(expected->y))
+    {
+        CHECK(isnan(result->y));
+    }
+    else
+    {
+        CHECK(result->y == Approx(expected->y));
+    }
+
+    if (isnan(expected->z))
+    {
+        CHECK(isnan(result->z));
+    }
+    else
+    {
+        CHECK(result->z == Approx(expected->z));
+    }
 }
 
 /*
@@ -264,12 +299,24 @@ TEST_CASE("math_vec_dot_normalized_*()", "[mathutil]")
 
 TEST_CASE("math_ray_scale()", "[mathutil]")
 {
-    // TODO
+    Ufvec vec1, vec2, result, expected;
+    vec1.f = {-0.5f, -1.f, 0.3};
+    vec2.f = {-0.25f, -1.83f, 2.032f};
+    expected = {0xbf966666, 0x3f9ed918, 0xc08c0b78};
+    math_ray_scale(-2.7f, &vec1.f, &vec2.f, &result.f);
+    check_vec3f(&result.f, &expected.f);
 }
 
 TEST_CASE("math_vec_normalize_len()", "[mathutil]")
 {
-    // TODO
+    Ufvec vec1, expected;
+    Uf expected_len;
+    expected_len.u = 0x3f942bb5;
+    vec1.f = {-0.5f, -1.f, 0.3};
+    expected = {0xbedd267c, 0xbf5d267c, 0x3e84b0b1};
+    f32 len = math_vec_normalize_len(&vec1.f);
+    check_vec3f(&vec1.f, &expected.f);
+    CHECK(len == Approx(expected_len.f));
 }
 
 TEST_CASE("math_mtxa_from_identity()", "[mathutil]")
@@ -286,12 +333,26 @@ TEST_CASE("math_mtxa_from_identity()", "[mathutil]")
 
 TEST_CASE("math_mtx_from_identity()", "[mathutil]")
 {
-    // TODO
+    Ufmtx result;
+    math_mtx_from_identity(&result.f);
+    Ufmtx expected = {
+        0x3f800000, 0x00000000, 0x00000000, 0x00000000,
+        0x00000000, 0x3f800000, 0x00000000, 0x00000000,
+        0x00000000, 0x00000000, 0x3f800000, 0x00000000,
+    };
+    check_mtx(&result.f, &expected.f);
 }
 
 TEST_CASE("math_mtxa_sq_from_identity()", "[mathutil]")
 {
-    // TODO
+    load_dummy_mtxa();
+    math_mtxa_sq_from_identity();
+    Ufmtx result = {
+        0x3f800000, 0x00000000, 0x00000000, 0x41cac4b1,
+        0x00000000, 0x3f800000, 0x00000000, 0xbf0b1162,
+        0x00000000, 0x00000000, 0x3f800000, 0xc22c6076,
+    };
+    check_mtxa(result);
 }
 
 TEST_CASE("math_mtxa_from_rotate_x()", "[mathutil]")
@@ -328,4 +389,89 @@ TEST_CASE("math_mtxa_from_rotate_z()", "[mathutil]")
         0x00000000, 0x00000000, 0x3f800000, 0x00000000,
     };
     check_mtxa(m);
+}
+
+TEST_CASE("math_mtxa_from_mtxb_tfset_point*()", "[mathutil]")
+{
+    Ufvec vec1;
+    Ufmtx result;
+    vec1.f = {-0.5f, -1.f, 0.3};
+    load_dummy_mtxa();
+    load_dummy_mtxb();
+    math_mtxa_from_mtxb_tfset_point_v(&vec1.f);
+    result = {
+        0x3eb22ba4, 0x3f182165, 0xbf399fa9, 0x415780ad,
+        0x3da5dd28, 0xbf4a230c, 0xbf1bb6bf, 0xc0c1d985,
+        0xbf6f1a37, 0x3e1c9d17, 0xbea55310, 0x3e4cfe5b,
+    };
+    check_mtxa(result);
+
+    load_dummy_mtxa();
+    load_dummy_mtxb();
+    math_mtxa_from_mtxb_tfset_point(vec1.f.x, vec1.f.y, vec1.f.z);
+    result = {
+        0x3eb22ba4, 0x3f182165, 0xbf399fa9, 0x415780ad,
+        0x3da5dd28, 0xbf4a230c, 0xbf1bb6bf, 0xc0c1d985,
+        0xbf6f1a37, 0x3e1c9d17, 0xbea55310, 0x3e4cfe5b,
+    };
+    check_mtxa(result);
+}
+
+TEST_CASE("math_mtxa_sq_normalize()", "[mathlib]")
+{
+    // TODO
+//    Ufmtx ufmtx = {
+//        0x3cfbd060, 0xbf377c0a, 0x3f3258ba, 0x41cac4b1,
+//        0xbe163ac7, 0x3f2fab90, 0x3f36635d, 0xbf0b1162,
+//        0xbf7d1b94, 0xbdfe2bdd, 0xbdac2690, 0xc22c6076,
+//    };
+//    load_dummy_mtxa();
+//    math_mtxa_mult_scale_s(100.f);
+//    math_mtxa_sq_normalize();
+//    check_mtxa(ufmtx);
+}
+
+TEST_CASE("mtx stack", "[mathlib]")
+{
+    Ufmtx first_pop, first_peek, second_pop, third_pop;
+
+    math_mtxa_from_identity();
+    math_mtxa_push();
+    load_dummy_mtxa();
+    math_mtxa_push();
+    load_dummy_mtxb();
+    math_mtxa_from_mtxb();
+    math_mtxa_push();
+    math_mtxa_from_identity();
+
+    first_pop = {
+        0x3eb22ba4, 0x3f182165, 0xbf399fa9, 0x41674670,
+        0x3da5dd28, 0xbf4a230c, 0xbf1bb6bf, 0xc0d3fb52,
+        0xbf6f1a37, 0x3e1c9d17, 0xbea55310, 0xbc8b3933,
+    };
+    first_peek = {
+        0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41cac4b1,
+        0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf0b1162,
+        0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22c6076,
+    };
+    second_pop = {
+        0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41cac4b1,
+        0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf0b1162,
+        0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22c6076,
+    };
+    third_pop = {
+        0x3f800000, 0x00000000, 0x00000000, 0x00000000,
+        0x00000000, 0x3f800000, 0x00000000, 0x00000000,
+        0x00000000, 0x00000000, 0x3f800000, 0x00000000,
+    };
+
+    math_mtxa_pop();
+    check_mtxa(first_pop);
+    math_mtxa_peek();
+    math_mtxa_peek();
+    check_mtxa(first_peek);
+    math_mtxa_pop();
+    check_mtxa(second_pop);
+    math_mtxa_pop();
+    check_mtxa(third_pop);
 }

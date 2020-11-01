@@ -133,10 +133,35 @@ void math_mtxa_from_rotate_y(s16 angle);
  */
 void math_mtxa_from_rotate_z(s16 angle);
 
-// TODO math_set_mtxa_translate_from_mtx_transform_..... two functions
+/*
+ * Initialize Matrix A to Matrix B, with the translation set to
+ * a point transformed by Matrix B.
+ *
+ * Point is given as a Vec3f.
+ *
+ * Equivalent to:
+ * mtxa = mtxb;
+ * mtxa[, 3] = mtxb * point;
+ */
+void math_mtxa_from_mtxb_tfset_point_v(Vec3f *point);
 
-// TODO
-void math_mtxa_normalize_quat();
+/*
+ * Initialize Matrix A to Matrix B, with the translation set to
+ * a point transformed by Matrix B.
+ *
+ * Point is given as x, y, z components.
+ *
+ * Equivalent to:
+ * mtxa = mtxb;
+ * mtxa[, 3] = mtxb * point;
+ */
+void math_mtxa_from_mtxb_tfset_point(f32 x, f32 y, f32 z);
+
+/*
+ * Normalize the 3x3 square part of Matrix A.
+ * TODO this is wrong ^^^ ????
+ */
+void math_mtxa_sq_normalize();
 
 /*
  * Push Matrix A onto the matrix stack.

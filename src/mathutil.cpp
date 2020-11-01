@@ -266,23 +266,39 @@ void math_mtxa_from_rotate_z(s16 angle)
     emtx_to_mtxa(emtx);
 }
 
-void mat_normalize_mtxa_quat()
+void math_mtxa_from_mtxb_tfset_point_v(Vec3f *point)
 {
-    // TODO what does this even do??
+    math_mtxa_from_mtxb_tfset_point(point->x, point->y, point->z);
+}
+
+void math_mtxa_from_mtxb_tfset_point(f32 x, f32 y, f32 z)
+{
+    Eigen::Vector3f epoint(x, y, z);
+    EigenMtx emtxb(emtx_from_mtxb());
+    emtxb.translation() = emtxb * epoint;
+    emtx_to_mtxa(emtxb);
+}
+
+void math_mtxa_sq_normalize()
+{
+    // TODO what does this actually do
+//    EigenMtx emtxa(emtx_from_mtxa());
+//    emtxa.linear().normalize();
+//    emtx_to_mtxa(emtxa);
 }
 
 void math_mtxa_push()
 {
     // Check does not appear in the original source
-    assert(gs->mtx_stack_ptr < gs->mtx_stack);
+    assert(gs->mtx_stack_ptr <= gs->mtx_stack + MTX_STACK_LEN);
 
-    memcpy(++gs->mtx_stack_ptr, &gs->mtxa_raw, sizeof(Mtx));
+    memcpy(--gs->mtx_stack_ptr, &gs->mtxa_raw, sizeof(Mtx));
 }
 
 void math_mtxa_pop()
 {
     // Check does not appear in the original source
-    assert(gs->mtx_stack_ptr > gs->mtx_stack + MTX_STACK_SIZE);
+    assert(gs->mtx_stack_ptr >= gs->mtx_stack);
 
     memcpy(&gs->mtxa_raw, gs->mtx_stack_ptr++, sizeof(Mtx));
 }
