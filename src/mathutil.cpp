@@ -289,7 +289,8 @@ void math_mtxa_sq_normalize()
 
 void math_mtxa_push()
 {
-    // Check does not appear in the original source
+    // Assertions do not appear in the original source
+    assert(gs->mtx_stack_ptr > gs->mtx_stack);
     assert(gs->mtx_stack_ptr <= gs->mtx_stack + MTX_STACK_LEN);
 
     memcpy(--gs->mtx_stack_ptr, &gs->mtxa_raw, sizeof(Mtx));
@@ -297,8 +298,9 @@ void math_mtxa_push()
 
 void math_mtxa_pop()
 {
-    // Check does not appear in the original source
+    // Assertions do not appear in the original source
     assert(gs->mtx_stack_ptr >= gs->mtx_stack);
+    assert(gs->mtx_stack_ptr < gs->mtx_stack + MTX_STACK_LEN);
 
     memcpy(&gs->mtxa_raw, gs->mtx_stack_ptr++, sizeof(Mtx));
 }
@@ -315,6 +317,10 @@ void math_mtxa_from_mtx(Mtx *mtx)
 
 void math_mtxa_peek()
 {
+    // Assertions do not appear in the original source
+    assert(gs->mtx_stack_ptr >= gs->mtx_stack);
+    assert(gs->mtx_stack_ptr < gs->mtx_stack + MTX_STACK_LEN);
+
     memcpy(&gs->mtxa_raw, gs->mtx_stack_ptr, sizeof(Mtx));
 }
 
