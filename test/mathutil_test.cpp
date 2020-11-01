@@ -66,6 +66,11 @@ void check_mtxa(const Ufmtx &ufmtx)
     check_mtx(&gs->mtxa_raw, &ufmtx.f);
 }
 
+void check_mtxb(const Ufmtx &ufmtx)
+{
+    check_mtx(&gs->mtxb_raw, &ufmtx.f);
+}
+
 void check_vec3f(Vec3f *result, Vec3f *expected)
 {
     if (isnan(expected->x))
@@ -133,6 +138,15 @@ void load_dummy_mtxb()
         0xbf6f1a37, 0x3e1c9d17, 0xbea55310, 0xbc8b3933,
     };
     memcpy(gs->mtxb_raw, mtx.f, sizeof(Mtx));
+}
+
+Ufmtx gen_dummy_ufmtx()
+{
+    return {
+        0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41cac4b1,
+        0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf0b1162,
+        0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22c6076,
+    };
 }
 
 TEST_CASE("math_sqrt()", "[mathutil]")
@@ -474,4 +488,59 @@ TEST_CASE("mtx stack", "[mathlib]")
     check_mtxa(second_pop);
     math_mtxa_pop();
     check_mtxa(third_pop);
+}
+
+TEST_CASE("mtx copying", "[mathutil]")
+{
+    // math_mtxa_to_mtx() identity:
+    Ufmtx ufmtx1 = {
+        0x3f800000, 0x00000000, 0x00000000, 0x00000000,
+        0x00000000, 0x3f800000, 0x00000000, 0x00000000,
+        0x00000000, 0x00000000, 0x3f800000, 0x00000000,
+    };
+    // math_mtxa_from_mtx() dummy:
+    Ufmtx ufmtx2 = {
+        0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41cac4b1,
+        0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf0b1162,
+        0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22c6076,
+    };
+    // math_mtxa_from_mtxb() dummy:
+    Ufmtx ufmtx3 = {
+        0x3eb22ba4, 0x3f182165, 0xbf399fa9, 0x41674670,
+        0x3da5dd28, 0xbf4a230c, 0xbf1bb6bf, 0xc0d3fb52,
+        0xbf6f1a37, 0x3e1c9d17, 0xbea55310, 0xbc8b3933,
+    };
+        // math_mtxa_to_mtxb() dummy:
+    Ufmtx ufmtx4 = {
+        0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41cac4b1,
+        0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf0b1162,
+        0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22c6076,
+    };
+    // math_mtx_copy() mtxb:
+    Ufmtx ufmtx5 = {
+        0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41cac4b1,
+        0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf0b1162,
+        0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22c6076,
+    };
+
+    Ufmtx mtx1, mtx2;
+    math_mtxa_from_identity();
+    math_mtxa_to_mtx(&mtx1.f);
+    math_mtxa_to_mtx(&mtx2.f);
+    check_mtx(&mtx1.f, &ufmtx1.f);
+
+    mtx1 = gen_dummy_ufmtx();
+    math_mtxa_from_mtx(&mtx1.f);
+    check_mtxa(ufmtx2);
+
+    load_dummy_mtxb();
+    math_mtxa_from_mtxb();
+    check_mtxa(ufmtx3);
+
+    load_dummy_mtxa();
+    math_mtxa_to_mtxb();
+    check_mtxb(ufmtx4);
+
+    math_mtx_copy(&mtx1.f, &mtx2.f);
+    check_mtx(&mtx2.f, &ufmtx5.f);
 }
