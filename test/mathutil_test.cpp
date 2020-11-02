@@ -140,12 +140,21 @@ void load_dummy_mtxb()
     memcpy(gs->mtxb_raw, mtx.f, sizeof(Mtx));
 }
 
-Ufmtx gen_dummy_ufmtx()
+Ufmtx gen_dummy_ufmtx1()
 {
     return {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41cac4b1,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf0b1162,
         0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22c6076,
+    };
+}
+
+Ufmtx gen_dummy_ufmtx2()
+{
+    return {
+        0x3eb22ba4, 0x3f182165, 0xbf399fa9, 0x41674670,
+        0x3da5dd28, 0xbf4a230c, 0xbf1bb6bf, 0xc0d3fb52,
+        0xbf6f1a37, 0x3e1c9d17, 0xbea55310, 0xbc8b3933,
     };
 }
 
@@ -490,6 +499,31 @@ TEST_CASE("mtx stack", "[mathlib]")
     check_mtxa(third_pop);
 }
 
+TEST_CASE("mtx square copying", "[mathutil]")
+{
+    Ufmtx expected;
+
+    Ufmtx mtx = gen_dummy_ufmtx1();
+    math_mtxa_from_identity();
+    math_mtxa_sq_from_mtx(&mtx.f);
+    expected = {
+        0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x00000000,
+        0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0x00000000,
+        0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0x00000000,
+    };
+    check_mtxa(expected);
+
+    mtx = gen_dummy_ufmtx2();
+    load_dummy_mtxa();
+    math_mtxa_sq_to_mtx(&mtx.f);
+    expected = {
+        0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41674670,
+        0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xc0d3fb52,
+        0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xbc8b3933,
+    };
+    check_mtx(&mtx.f, &expected.f);
+}
+
 TEST_CASE("mtx copying", "[mathutil]")
 {
     // math_mtxa_to_mtx() identity:
@@ -529,7 +563,7 @@ TEST_CASE("mtx copying", "[mathutil]")
     math_mtxa_to_mtx(&mtx2.f);
     check_mtx(&mtx1.f, &ufmtx1.f);
 
-    mtx1 = gen_dummy_ufmtx();
+    mtx1 = gen_dummy_ufmtx1();
     math_mtxa_from_mtx(&mtx1.f);
     check_mtxa(ufmtx2);
 
@@ -543,4 +577,116 @@ TEST_CASE("mtx copying", "[mathutil]")
 
     math_mtx_copy(&mtx1.f, &mtx2.f);
     check_mtx(&mtx2.f, &ufmtx5.f);
+}
+
+TEST_CASE("math_mtxa_invert()", "[mathutil]")
+{
+    load_dummy_mtxa();
+    math_mtxa_invert();
+    Ufmtx mtx = {
+        0x3cfbd06a, 0xbe163ac9, 0xbf7d1b94, 0xc22ddd52,
+        0xbf377c0a, 0x3f2fab91, 0xbdfe2bdb, 0x41530df8,
+        0x3f3258bb, 0x3f36635e, 0xbdac2691, 0xc1a7251a,
+    };
+    check_mtxa(mtx);
+}
+
+TEST_CASE("math_mtxa_transpose()", "[mathutil]")
+{
+    load_dummy_mtxa();
+    math_mtxa_transpose();
+    Ufmtx mtx = {
+        0x3cfbd060, 0xbe163ac8, 0xbf7d1b94, 0xc22ddd52,
+        0xbf377c09, 0x3f2fab90, 0xbdfe2bdc, 0x41530df5,
+        0x3f3258ba, 0x3f36635c, 0xbdac2690, 0xc1a72519,
+    };
+    check_mtxa(mtx);
+}
+
+TEST_CASE("math mtx mult", "[mathutil]")
+{
+    Ufmtx result;
+
+    load_dummy_mtxa();
+    Ufmtx mtx = gen_dummy_ufmtx2();
+    math_mtxa_mult_right(&mtx.f);
+    result = {
+        0xbf32b240, 0x3f30d502, 0x3e413f62, 0x41f43642,
+        0xbf293115, 0xbf0521ee, 0xbf0a8358, 0xc0e7186a,
+        0xbe8d1b5a, 0xbf009dc0, 0x3f51ccd4, 0xc2623f82,
+    };
+    check_mtxa(result);
+
+    load_dummy_mtxa();
+    math_mtxa_mult_left(&mtx.f);
+    result = {
+        0x3f23f231, 0x3e7e5231, 0x3f3a0d3d, 0x4258cc16,
+        0x3f383f45, 0xbf063e5b, 0xbee8f5dd, 0x41b08e8a,
+        0x3e8944d1, 0x3f507ff8, 0xbf03bb30, 0xc11dba83,
+    };
+    check_mtxa(result);
+
+    mtx = gen_dummy_ufmtx1();
+    load_dummy_mtxb();
+    math_mtxa_from_mtxb_mult_mtx(&mtx.f);
+    result = {
+        0x3f23f231, 0x3e7e5231, 0x3f3a0d3d, 0x4258cc16,
+        0x3f383f45, 0xbf063e5b, 0xbee8f5dd, 0x41b08e8a,
+        0x3e8944d1, 0x3f507ff8, 0xbf03bb30, 0xc11dba83,
+    };
+    check_mtxa(result);
+
+    Ufmtx mtx_left = gen_dummy_ufmtx1();
+    Ufmtx mtx_right = gen_dummy_ufmtx2();
+    Ufmtx result2;
+    math_mtx_mult(&mtx_left.f, &mtx_right.f, &result2.f);
+    result = {
+        0xbf32b240, 0x3f30d502, 0x3e413f62, 0x41f43642,
+        0xbf293115, 0xbf0521ee, 0xbf0a8358, 0xc0e7186a,
+        0xbe8d1b5a, 0xbf009dc0, 0x3f51ccd4, 0xc2623f82,
+    };
+    check_mtx(&result2.f, &result.f);
+}
+
+TEST_CASE("math mtxa tfset", "[mathutil]")
+{
+    Ufvec vec1;
+    Ufmtx expected;
+
+    vec1.f = {-0.5f, -1.f, 0.3};
+    load_dummy_mtxa();
+    math_mtxa_tfset_point_v(&vec1.f);
+    expected = {
+        0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41d20d1f,
+        0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf713e30,
+        0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22a00fb,
+    };
+    check_mtxa(expected);
+
+    load_dummy_mtxa();
+    math_mtxa_tfset_point(vec1.f.x, vec1.f.y, vec1.f.z);
+    expected = {
+        0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41d20d1f,
+        0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf713e30,
+        0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22a00fb,
+    };
+    check_mtxa(expected);
+
+    load_dummy_mtxa();
+    math_mtxa_tfset_neg_point_v(&vec1.f);
+    expected = {
+        0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41c37c43,
+        0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbe13924e,
+        0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22ebff1,
+    };
+    check_mtxa(expected);
+
+    load_dummy_mtxa();
+    math_mtxa_tfset_neg_point(vec1.f.x, vec1.f.y, vec1.f.z);
+    expected = {
+        0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41c37c43,
+        0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbe13924e,
+        0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22ebff1,
+    };
+    check_mtxa(expected);
 }

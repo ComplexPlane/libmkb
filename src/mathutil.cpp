@@ -279,12 +279,11 @@ void math_mtxa_from_mtxb_tfset_point(f32 x, f32 y, f32 z)
     emtx_to_mtxa(emtxb);
 }
 
-void math_mtxa_sq_normalize()
+void math_mtxa_normalize_basis()
 {
-    // TODO what does this actually do
-//    EigenMtx emtxa(emtx_from_mtxa());
-//    emtxa.linear().normalize();
-//    emtx_to_mtxa(emtxa);
+    EigenMtx emtxa(emtx_from_mtxa());
+    // TODO
+//    emtxa.cols()[0]
 }
 
 void math_mtxa_push()
@@ -324,6 +323,22 @@ void math_mtxa_peek()
     memcpy(&gs->mtxa_raw, gs->mtx_stack_ptr, sizeof(Mtx));
 }
 
+void math_mtxa_sq_to_mtx(Mtx *mtx)
+{
+    EigenMtx emtx(emtx_from_mtx(mtx));
+    EigenMtx emtxa(emtx_from_mtxa());
+    emtx.linear() = emtxa.linear();
+    emtx_to_mtx(emtx, mtx);
+}
+
+void math_mtxa_sq_from_mtx(Mtx *mtx)
+{
+    EigenMtx emtx(emtx_from_mtx(mtx));
+    EigenMtx emtxa(emtx_from_mtxa());
+    emtxa.linear() = emtx.linear();
+    emtx_to_mtxa(emtxa);
+}
+
 void math_mtxa_from_mtxb()
 {
     memcpy(&gs->mtxa_raw, &gs->mtxb_raw, sizeof(Mtx));
@@ -346,7 +361,10 @@ void math_mtxa_invert()
 
 void math_mtxa_transpose()
 {
-    // TODO
+    EigenMtx emtxa(emtx_from_mtxa());
+    emtxa.linear().transposeInPlace();
+    emtxa.translation() = -(emtxa.linear() * emtxa.translation());
+    emtx_to_mtxa(emtxa);
 }
 
 void math_mtxa_mult_right(Mtx *mtx)
@@ -369,12 +387,12 @@ void math_mtx_mult(Mtx *mtx1, Mtx *mtx2, Mtx *dst)
     emtx_to_mtx(emtx_from_mtx(mtx1) * emtx_from_mtx(mtx2), dst);
 }
 
-void math_mtxa_tl_from_mtxa_tf_point_v(Vec3f *point)
+void math_mtxa_tfset_point_v(Vec3f *point)
 {
-    math_mtxa_tl_from_mtxa_tf_point(point->x, point->y, point->z);
+    math_mtxa_tfset_point(point->x, point->y, point->z);
 }
 
-void math_mtxa_tl_from_mtxa_tf_point(f32 x, f32 y, f32 z)
+void math_mtxa_tfset_point(f32 x, f32 y, f32 z)
 {
     Eigen::Vector3f epoint(x, y, z);
     EigenMtx emtx(emtx_from_mtxa());
@@ -382,17 +400,14 @@ void math_mtxa_tl_from_mtxa_tf_point(f32 x, f32 y, f32 z)
     emtx_to_mtxa(emtx);
 }
 
-void math_mtxa_tl_from_mtxa_inv_tf_point_v(Vec3f *point)
+void math_mtxa_tfset_neg_point_v(Vec3f *point)
 {
-    math_mtxa_tl_from_mtxa_inv_tf_point(point->x, point->y, point->z);
+    math_mtxa_tfset_point(-point->x, -point->y, -point->z);
 }
 
-void math_mtxa_tl_from_mtxa_inv_tf_point(f32 x, f32 y, f32 z)
+void math_mtxa_tfset_neg_point(f32 x, f32 y, f32 z)
 {
-    Eigen::Vector3f epoint(x, y, z);
-    EigenMtx emtx(emtx_from_mtxa());
-    emtx.translation() = emtx.inverse() * epoint;
-    emtx_to_mtxa(emtx);
+    math_mtxa_tfset_point(-x, -y, -z);
 }
 
 void math_mtxa_mult_scale_v(Vec3f *scale)

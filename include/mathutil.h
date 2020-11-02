@@ -158,10 +158,9 @@ void math_mtxa_from_mtxb_tfset_point_v(Vec3f *point);
 void math_mtxa_from_mtxb_tfset_point(f32 x, f32 y, f32 z);
 
 /*
- * Normalize the 3x3 square part of Matrix A.
- * TODO this is wrong ^^^ ????
+ * Normalize each basis vector of Matrix A.
  */
-void math_mtxa_sq_normalize();
+void math_mtxa_normalize_basis();
 
 /*
  * Push Matrix A onto the matrix stack.
@@ -177,6 +176,16 @@ void math_mtxa_pop();
  * Copy the top-most matrix on the matrix stack into Matrix A.
  */
 void math_mtxa_peek();
+
+/*
+ * Copy the square part of Matrix A to that of `mtx`.
+ */
+void math_mtxa_sq_to_mtx(Mtx *mtx);
+
+/*
+ * Copy the square part of `mtx` to that of Matrix A.
+ */
+void math_mtxa_sq_from_mtx(Mtx *mtx);
 
 /*
  * Copy Matrix A into the provided `mtx`.
@@ -210,6 +219,10 @@ void math_mtxa_invert();
 
 /*
  * Transpose Matrix A.
+ *
+ * The inner 3x3 matrix is transposed, and the new translation column
+ * is set to the result of the old translation column transformed by the new
+ * transposed 3x3 matrix.
  */
 void math_mtxa_transpose();
 
@@ -244,30 +257,30 @@ void math_mtx_mult(Mtx *mtx1, Mtx *mtx2, Mtx *dst);
  *
  * Point is given as a Vec3f.
  */
-void math_mtxa_tl_from_mtxa_tf_point_v(Vec3f *point);
+void math_mtxa_tfset_point_v(Vec3f *point);
 
 /*
  * Transform a point by Matrix A, then assign the result to the translation column of Matrix A.
  *
  * Point is given as x, y, z components.
  */
-void math_mtxa_tl_from_mtxa_tf_point(f32 x, f32 y, f32 z);
+void math_mtxa_tfset_point(f32 x, f32 y, f32 z);
 
 /*
- * Transform a point by the inverse of Matrix A,
+ * Transform the negation of a point by Matrix A,
  * then assign the result to the translation column of Matrix A.
  *
  * Point is given as a Vec3f.
  */
-void math_mtxa_tl_from_mtxa_inv_tf_point_v(Vec3f *point);
+void math_mtxa_tfset_neg_point_v(Vec3f *point);
 
 /*
- * Transform a point by the inverse of Matrix A,
+ * Transform the negation of a point by Matrix A,
  * then assign the result to the translation column of Matrix A.
  *
  * Point is given as x, y, z components.
  */
-void math_mtxa_tl_from_mtxa_inv_tf_point(f32 x, f32 y, f32 z);
+void math_mtxa_tfset_neg_point(f32 x, f32 y, f32 z);
 
 /*
  * Scale the square part of Matrix A by the vector `scale`.
