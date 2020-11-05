@@ -67,26 +67,26 @@ s16 math_atan(f64 x);
  * This is the safe version; if a vector is zero then 0.f will be returned,
  * and if a vector has a component of INFINITY, then INFINITY will be returned.
  */
-f32 math_vec_dot_normalized_safe(Vec3f *vec1, Vec3f *vec2);
+f32 vec_dot_normalized_safe(Vec3f *vec1, Vec3f *vec2);
 
 /*
  * Scales the length of a ray.
  *
  * The start pt remains the same, and the new end pt is written to `out_ray_end`.
  */
-void math_ray_scale(f32 scale, Vec3f *ray_start, Vec3f *ray_end, Vec3f *out_ray_end);
+void ray_scale(f32 scale, Vec3f *ray_start, Vec3f *ray_end, Vec3f *out_ray_end);
 
 /*
  * Sets the length of a vector.
  *
  * Vector with new length is written to `out_vec`.
  */
-void math_vec_set_length(f32 len, Vec3f *vec, Vec3f *out_vec);
+void vec_set_len(f32 len, Vec3f *vec, Vec3f *out_vec);
 
 /*
  * Normalizes a vector and returns its original length.
  */
-f32 math_vec_normalize_len(Vec3f *vec);
+f32 vec_normalize_len(Vec3f *vec);
 
 /*
  * Computes the dot product of the normals of two vectors.
@@ -95,43 +95,47 @@ f32 math_vec_normalize_len(Vec3f *vec);
  * This is the unsafe version; if either vector is zero or has a component of INFINITY,
  * NAN will be returned.
  */
-f32 math_vec_dot_normalized(Vec3f *vec1, Vec3f *vec2);
+f32 vec_dot_normalized(Vec3f *vec1, Vec3f *vec2);
 
 /*
  * Sets Matrix A to the identity matrix.
  */
-void math_mtxa_from_identity();
+void mtxa_from_identity();
 
 /*
  * Sets the passed matrix to the identity matrix, zeroing the translation column.
  */
-void math_mtx_from_identity(Mtx *mtx);
+void mtx_from_identity(Mtx *mtx);
 
 /*
  * Sets the square part of Matrix A to the identity matrix (preserving translation).
  */
-void math_mtxa_sq_from_identity();
+void mtxa_sq_from_identity();
 
-// TODO
-void math_mtxa_tl_from_vec_v(Vec3f *translate);
+/*
+ * Sets Matrix A to the identity matrix with the translation column set to `translate`.
+ */
+void mtxa_from_identity_tl(Vec3f *translate);
 
-// TODO
-void math_mtxa_tl_from_vec(f32 x, f32 y, f32 z);
+/*
+ * Sets Matrix A to the identity matrix with the translation column set to (x, y, z);
+ */
+void mtxa_from_identity_tl_xyz(f32 x, f32 y, f32 z);
 
 /*
  * Set Matrix A to a matrix representing an X rotation with the given angle.
  */
-void math_mtxa_from_rotate_x(s16 angle);
+void mtxa_from_rotate_x(s16 angle);
 
 /*
  * Set Matrix A to a matrix representing a Y rotation with the given angle.
  */
-void math_mtxa_from_rotate_y(s16 angle);
+void mtxa_from_rotate_y(s16 angle);
 
 /*
  * Set Matrix A to a matrix representing a Z rotation with the given angle.
  */
-void math_mtxa_from_rotate_z(s16 angle);
+void mtxa_from_rotate_z(s16 angle);
 
 /*
  * Initialize Matrix A to Matrix B, with the translation set to
@@ -143,7 +147,7 @@ void math_mtxa_from_rotate_z(s16 angle);
  * mtxa = mtxb;
  * mtxa[, 3] = mtxb * point;
  */
-void math_mtxa_from_mtxb_tfset_point_v(Vec3f *point);
+void mtxa_from_mtxb_tfset_point(Vec3f *point);
 
 /*
  * Initialize Matrix A to Matrix B, with the translation set to
@@ -155,67 +159,67 @@ void math_mtxa_from_mtxb_tfset_point_v(Vec3f *point);
  * mtxa = mtxb;
  * mtxa[, 3] = mtxb * point;
  */
-void math_mtxa_from_mtxb_tfset_point(f32 x, f32 y, f32 z);
+void mtxa_from_mtxb_tfset_point_xyz(f32 x, f32 y, f32 z);
 
 /*
  * Normalize each basis vector of Matrix A.
  */
-void math_mtxa_normalize_basis();
+void mtxa_normalize_basis();
 
 /*
  * Push Matrix A onto the matrix stack.
  */
-void math_mtxa_push();
+void mtxa_push();
 
 /*
  * Pop from the matrix stack into Matrix A.
  */
-void math_mtxa_pop();
+void mtxa_pop();
 
 /*
  * Copy the top-most matrix on the matrix stack into Matrix A.
  */
-void math_mtxa_peek();
+void mtxa_peek();
 
 /*
  * Copy the square part of Matrix A to that of `mtx`.
  */
-void math_mtxa_sq_to_mtx(Mtx *mtx);
+void mtxa_sq_to_mtx(Mtx *mtx);
 
 /*
  * Copy the square part of `mtx` to that of Matrix A.
  */
-void math_mtxa_sq_from_mtx(Mtx *mtx);
+void mtxa_sq_from_mtx(Mtx *mtx);
 
 /*
  * Copy Matrix A into the provided `mtx`.
  */
-void math_mtxa_to_mtx(Mtx *mtx);
+void mtxa_to_mtx(Mtx *mtx);
 
 /*
  * Copy the provided `mtx` into Matrix A.
  */
-void math_mtxa_from_mtx(Mtx *mtx);
+void mtxa_from_mtx(Mtx *mtx);
 
 /*
  * Assign Matrix A to the value of Matrix B.
  */
-void math_mtxa_from_mtxb();
+void mtxa_from_mtxb();
 
 /*
  * Assign Matrix B to the value of Matrix A.
  */
-void math_mtxa_to_mtxb();
+void mtxa_to_mtxb();
 
 /*
  * Copy the `src` matrix into the `dst` matrix.
  */
-void math_mtx_copy(Mtx *src, Mtx *dst);
+void mtx_copy(Mtx *src, Mtx *dst);
 
 /*
  * Invert Matrix A.
  */
-void math_mtxa_invert();
+void mtxa_invert();
 
 /*
  * Transpose Matrix A.
@@ -224,47 +228,47 @@ void math_mtxa_invert();
  * is set to the result of the old translation column transformed by the new
  * transposed 3x3 matrix.
  */
-void math_mtxa_transpose();
+void mtxa_transpose();
 
 /*
  * Multiply Matrix A by the given `mtx` on the right.
  *
  * mtxa = mtxa * mtx
  */
-void math_mtxa_mult_right(Mtx *mtx);
+void mtxa_mult_right(Mtx *mtx);
 
 /*
  * Multiple Matrix A by the given `mtx` on the left.
  *
  * mtxa = mtx * mtxa
  */
-void math_mtxa_mult_left(Mtx *mtx);
+void mtxa_mult_left(Mtx *mtx);
 
 /*
  * Assign Matrix A to the matrix product of Matrix B and `mtx`.
  *
  * mtxa = mtxb * mtx
  */
-void math_mtxa_from_mtxb_mult_mtx(Mtx *mtx);
+void mtxa_from_mtxb_mult_mtx(Mtx *mtx);
 
 /*
  * Assign `dst` to the matrix product of `mtx1` and `mtx2`.
  */
-void math_mtx_mult(Mtx *mtx1, Mtx *mtx2, Mtx *dst);
+void mtx_mult(Mtx *mtx1, Mtx *mtx2, Mtx *dst);
 
 /*
  * Transform a point by Matrix A, then assign the result to the translation column of Matrix A.
  *
  * Point is given as a Vec3f.
  */
-void math_mtxa_tfset_point_v(Vec3f *point);
+void mtxa_tfset_point(Vec3f *point);
 
 /*
  * Transform a point by Matrix A, then assign the result to the translation column of Matrix A.
  *
  * Point is given as x, y, z components.
  */
-void math_mtxa_tfset_point(f32 x, f32 y, f32 z);
+void mtxa_tfset_point_xyz(f32 x, f32 y, f32 z);
 
 /*
  * Transform the negation of a point by Matrix A,
@@ -272,7 +276,7 @@ void math_mtxa_tfset_point(f32 x, f32 y, f32 z);
  *
  * Point is given as a Vec3f.
  */
-void math_mtxa_tfset_neg_point_v(Vec3f *point);
+void mtxa_tfset_neg_point(Vec3f *point);
 
 /*
  * Transform the negation of a point by Matrix A,
@@ -280,7 +284,7 @@ void math_mtxa_tfset_neg_point_v(Vec3f *point);
  *
  * Point is given as x, y, z components.
  */
-void math_mtxa_tfset_neg_point(f32 x, f32 y, f32 z);
+void mtxa_tfset_neg_point_xyz(f32 x, f32 y, f32 z);
 
 /*
  * Scale the square part of Matrix A by the vector `scale`.
@@ -288,14 +292,14 @@ void math_mtxa_tfset_neg_point(f32 x, f32 y, f32 z);
  * The first, second, and third columns of Matrix A are scaled by
  * `scale.x`, `scale.y`, and `scale.z` respectively.
  */
-void math_mtxa_mult_scale_v(Vec3f *scale);
+void mtxa_scale(Vec3f *scale);
 
 /*
  * Apply a scale transformation to Matrix A, with a uniform X, Y, and Z scale.
  *
  * The square part of the matrix is scaled, while the translation column is unaffected.
  */
-void math_mtxa_mult_scale_s(f32 scale);
+void mtxa_scale_s(f32 scale);
 
 /*
  * Scale the square part of Matrix A by `x`, `y`, and `z` scales.
@@ -303,143 +307,177 @@ void math_mtxa_mult_scale_s(f32 scale);
  * The first, second, and third columns of Matrix A are scaled by
  * `x`, `y`, and `z` respectively.
  */
-void math_mtxa_mult_scale(f32 x, f32 y, f32 z);
+void mtxa_scale_xyz(f32 x, f32 y, f32 z);
 
 /*
  * Transform a Vec3f point by Matrix A.
  *
  * `src` is the input point and `dst` is the resultant transformed point.
- * Transform includes translation, unlike `math_tf_vec` variants.
+ * Transform includes translation, unlike `tf_vec` variants.
  */
-void math_mtxa_tf_point_v(Vec3f *src, Vec3f *dst);
+void mtxa_tf_point(Vec3f *src, Vec3f *dst);
 
 /*
  * Transform a Vec3f vector by Matrix A.
  *
  * `src` is the input vector and `dst` is the resultant transformed vector.
  * Transforming a vector does not include translation, unlike transforming a point
- * with `math_tf_point` variants.
+ * with `tf_point` variants.
  */
-void math_mtxa_tf_vec_v(Vec3f *src, Vec3f *dst);
+void mtxa_tf_vec(Vec3f *src, Vec3f *dst);
 
 /*
  * Transform a (x, y, z) point by Matrix A.
  *
- * Transforming a point includes translation, unlike `math_tf_vec` variants.
+ * Transforming a point includes translation, unlike `tf_vec` variants.
  */
-void math_mtxa_tf_point(f32 x, f32 y, f32 z, Vec3f *dst);
+void mtxa_tf_point_xyz(f32 x, f32 y, f32 z, Vec3f *dst);
 
 /*
  * Transform a (x, y, z) vector by Matrix A.
  *
  * Transforming a vector does not include translation, unlike transforming a point
- * with `math_tf_point` variants.
+ * with `tf_point` variants.
  */
-void math_mtxa_tf_vec(f32 x, f32 y, f32 z, Vec3f *dst);
+void mtxa_tf_vec_xyz(f32 x, f32 y, f32 z, Vec3f *dst);
 
-// TODO port the handful of "xz" whatever funcs
+/*
+ * Transform a point by the inverse of Matrix A, assuming Matrix A is a rigid transformation.
+ *
+ * Point is given as a Vec3f.
+ */
+void mtxa_rigid_inv_tf_point(Vec3f *src, Vec3f *dst);
 
-void math_tf_point_xz_by_mtxa_v(Vec3f *src, Vec3f *dst);
+/*
+ * Transform a point by the inverse of Matrix A, assuming Matrix A is a rigid transformation.
+ *
+ * Point is given as x, y, z coordinates.
+ */
+void mtxa_rigid_inv_tf_point_xyz(f32 x, f32 y, f32 z, Vec3f *dst);
+
+/*
+ * Transform the vector given by Matrix A's translation column
+ * by the inverse of Matrix A, assuming Matrix A is a rigid transformation.
+ * The result is then negated.
+ *
+ * TODO I'm not really sure what this transformation represents. The function should probably
+ * renamed once a better intuition is figured out.
+ */
+void mtxa_rigid_inv_tf_tl(Vec3f *dst);
+
+/*
+ * Transform a vector by the inverse of Matrix A, assuming Matrix A is a rigid transformation.
+ *
+ * Vector is given as a Vec3f.
+ */
+void mtxa_rigid_inv_tf_vec(Vec3f *src, Vec3f *dst);
+
+/*
+ * Transform a vector by the inverse of Matrix A, assuming Matrix A is a rigid transformation.
+ *
+ * Vector is given as x, y, z coordinates.
+ */
+void mtxa_rigid_inv_tf_vec_xyz(f32 x, f32 y, f32 z, Vec3f *dst);
 
 /*
  * Apply an X rotation to Matrix A.
  *
  * Equivalent to: mtxa = mtxa * xrotation(angle)
  */
-void math_mtxa_mult_rotate_x(s16 angle);
+void mtxa_rotate_x(s16 angle);
 
 /*
  * Apply a Y rotation to Matrix A.
  *
  * Equivalent to: mtxa = mtxa * yrotation(angle)
  */
-void math_mtxa_mult_rotate_y(s16 angle);
+void mtxa_rotate_y(s16 angle);
 
 /*
  * Apply a Z rotation to Matrix A.
  *
  * Equivalent to: mtxa = mtxa * zrotation(angle)
  */
-void math_mtxa_mult_rotate_z(s16 angle);
+void mtxa_rotate_z(s16 angle);
 
 /*
  * Initialize Matrix A from a rotation quaternion.
  *
  * Translation is set to 0.
  */
-void math_mtxa_from_quat(Quat *quat);
+void mtxa_from_quat(Quat *quat);
 
 /*
  * Multiply two quaternions.
  *
  * `left` is multiplied by `right` and the result is stored in `dst`.
  */
-void math_quat_mult(Quat *dst, Quat *left, Quat *right);
+void quat_mult(Quat *dst, Quat *left, Quat *right);
 
 /*
  * Initialize a rotation quaternion from Matrix A.
  */
-void math_mtxa_to_quat(Quat *out_quat);
+void mtxa_to_quat(Quat *out_quat);
 
 /*
  * Initialize a rotation quaternion from an axis and an angle.
  */
-void math_quat_from_axis_angle(Quat *out_quat, Vec3f *axis, s16 angle);
+void quat_from_axis_angle(Quat *out_quat, Vec3f *axis, s16 angle);
 
 /*
  * Extract the rotation axis and angle from a quaternion.
  *
  * Writes the axis to `out_axis` and returns the angle in radians.
  */
-double math_quat_to_axis_angle(Quat *quat, Vec3f *out_axis);
+double quat_to_axis_angle(Quat *quat, Vec3f *out_axis);
 
 /*
  * Normalize a quaternion.
  */
-void math_quat_normalize(Quat *quat);
+void quat_normalize(Quat *quat);
 
 /*
  * Compute the quaternion rotation between two vectors.
  */
-void math_quat_from_vecs(Quat *out_quat, Vec3f *start, Vec3f *end);
+void quat_from_vecs(Quat *out_quat, Vec3f *start, Vec3f *end);
 
 /*
  * Quaternion spherical linear interpolation.
  */
-void math_quat_slerp(f32 t, Quat *dst, Quat *quat1, Quat *quat2);
+void quat_slerp(f32 t, Quat *dst, Quat *quat1, Quat *quat2);
 
 /*
  * Compute a Vec3s Euler rotation from a ray direction.
  *
  * The Z component of the rotation is always 0.
  */
-void math_ray_to_euler(Vec3f *ray_start, Vec3f *ray_end, Vec3s *out_rot);
+void ray_to_euler(Vec3f *ray_start, Vec3f *ray_end, Vec3s *out_rot);
 
 /*
  * Compute an x, y Euler rotation from a ray direction.
  */
-void math_ray_to_euler_xy(Vec3f *ray_start, Vec3f *ray_end, s16 *out_rot_x, s16 *out_rot_y);
+void ray_to_euler_xy(Vec3f *ray_start, Vec3f *ray_end, s16 *out_rot_x, s16 *out_rot_y);
 
 /*
  * Compute a Vec3s Euler rotation from a vector direction.
  *
  * The Z component of the rotation is always 0.
  */
-void math_vec_to_euler(Vec3f *vec, Vec3s *out_rot);
+void vec_to_euler(Vec3f *vec, Vec3s *out_rot);
 
 /*
  * Compute an x, y Euler rotation from a vector direction.
  */
-void math_vec_to_euler_xy(Vec3f *vec, s16 *out_rot_x, s16 *out_rot_y);
+void vec_to_euler_xy(Vec3f *vec, s16 *out_rot_x, s16 *out_rot_y);
 
 /*
  * Compute a y, x, z Euler rotation from Matrix A's rotation.
  */
-void math_mtxa_to_euler(s16 *out_rot_y, s16 *out_rot_x, s16 *out_rot_z);
+void mtxa_to_euler_yxz(s16 *out_rot_y, s16 *out_rot_x, s16 *out_rot_z);
 
 /*
  * Compute a Vec3f Euler rotation from Matrix A's rotation.
  */
-void math_mtxa_to_euler_v(Vec3s *out_rot);
+void mtxa_to_euler(Vec3s *out_rot);
 
 }

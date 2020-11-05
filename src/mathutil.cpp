@@ -159,7 +159,7 @@ s16 math_atan(f64 x)
     return radians_to_s16(atan(x));
 }
 
-f32 math_vec_dot_normalized_safe(Vec3f *vec1, Vec3f *vec2)
+f32 vec_dot_normalized_safe(Vec3f *vec1, Vec3f *vec2)
 {
     f32 len1_sq = VEC_LEN_SQ(*vec1);
     f32 len2_sq = VEC_LEN_SQ(*vec2);
@@ -172,13 +172,13 @@ f32 math_vec_dot_normalized_safe(Vec3f *vec1, Vec3f *vec2)
     return dot * inv_len_prod;
 }
 
-void math_ray_scale(f32 scale, Vec3f *ray_start, Vec3f *ray_end, Vec3f *out_ray_end)
+void ray_scale(f32 scale, Vec3f *ray_start, Vec3f *ray_end, Vec3f *out_ray_end)
 {
     Vec3f scaled_delta = VEC_SCALE(scale, VEC_SUB(*ray_end, *ray_start));
     *out_ray_end = VEC_ADD(*ray_start, scaled_delta);
 }
 
-void math_vec_set_length(f32 len, Vec3f *vec, Vec3f *out_vec)
+void vec_set_len(f32 len, Vec3f *vec, Vec3f *out_vec)
 {
     f32 len_sq = VEC_LEN_SQ(*vec);
 
@@ -195,7 +195,7 @@ void math_vec_set_length(f32 len, Vec3f *vec, Vec3f *out_vec)
     }
 }
 
-f32 math_vec_normalize_len(Vec3f *vec)
+f32 vec_normalize_len(Vec3f *vec)
 {
     f32 len_sq = VEC_LEN_SQ(*vec);
     if (len_sq > 0.f)
@@ -209,7 +209,7 @@ f32 math_vec_normalize_len(Vec3f *vec)
     return 0.f;
 }
 
-f32 math_vec_dot_normalized(Vec3f *vec1, Vec3f *vec2)
+f32 vec_dot_normalized(Vec3f *vec1, Vec3f *vec2)
 {
     f32 dot = VEC_DOT(*vec1, *vec2);
     f32 len_sq_prod = VEC_LEN_SQ(*vec1) * VEC_LEN_SQ(*vec2);
@@ -217,19 +217,19 @@ f32 math_vec_dot_normalized(Vec3f *vec1, Vec3f *vec2)
     return dot * inv_len_prod;
 }
 
-void math_mtxa_from_identity()
+void mtxa_from_identity()
 {
     EigenMtx emtx(emtx_from_mtxa());
     emtx.setIdentity();
     emtx_to_mtxa(emtx);
 }
 
-void math_mtx_from_identity(Mtx *mtx)
+void mtx_from_identity(Mtx *mtx)
 {
     memcpy(mtx, EigenMtx::Identity().data(), sizeof(Mtx));
 }
 
-void math_mtxa_sq_from_identity()
+void mtxa_sq_from_identity()
 {
     EigenMtx emtx(emtx_from_mtxa());
     Eigen::Vector3f tl = emtx.translation();
@@ -238,40 +238,43 @@ void math_mtxa_sq_from_identity()
     emtx_to_mtxa(emtx);
 }
 
-void math_mtxa_tl_from_vec_v(Vec3f *translate)
+void mtxa_from_identity_tl(Vec3f *translate)
 {
-    // TODO
+    mtxa_from_identity_tl_xyz(translate->x, translate->y, translate->z);
 }
 
-void math_mtxa_tl_from_vec(f32 x, f32 y, f32 z)
+void mtxa_from_identity_tl_xyz(f32 x, f32 y, f32 z)
 {
-    // TODO
+    EigenMtx emtxa(emtx_from_mtxa());
+    emtxa.linear().setIdentity();
+    emtxa.translation() = Eigen::Vector3f(x, y, z);
+    emtx_to_mtxa(emtxa);
 }
 
-void math_mtxa_from_rotate_x(s16 angle)
+void mtxa_from_rotate_x(s16 angle)
 {
     EigenMtx emtx(Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitX()));
     emtx_to_mtxa(emtx);
 }
 
-void math_mtxa_from_rotate_y(s16 angle)
+void mtxa_from_rotate_y(s16 angle)
 {
     EigenMtx emtx(Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitY()));
     emtx_to_mtxa(emtx);
 }
 
-void math_mtxa_from_rotate_z(s16 angle)
+void mtxa_from_rotate_z(s16 angle)
 {
     EigenMtx emtx(Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitZ()));
     emtx_to_mtxa(emtx);
 }
 
-void math_mtxa_from_mtxb_tfset_point_v(Vec3f *point)
+void mtxa_from_mtxb_tfset_point(Vec3f *point)
 {
-    math_mtxa_from_mtxb_tfset_point(point->x, point->y, point->z);
+    mtxa_from_mtxb_tfset_point_xyz(point->x, point->y, point->z);
 }
 
-void math_mtxa_from_mtxb_tfset_point(f32 x, f32 y, f32 z)
+void mtxa_from_mtxb_tfset_point_xyz(f32 x, f32 y, f32 z)
 {
     Eigen::Vector3f epoint(x, y, z);
     EigenMtx emtxb(emtx_from_mtxb());
@@ -279,14 +282,16 @@ void math_mtxa_from_mtxb_tfset_point(f32 x, f32 y, f32 z)
     emtx_to_mtxa(emtxb);
 }
 
-void math_mtxa_normalize_basis()
+void mtxa_normalize_basis()
 {
     EigenMtx emtxa(emtx_from_mtxa());
-    // TODO
-//    emtxa.cols()[0]
+    emtxa.linear().col(0).normalize();
+    emtxa.linear().col(1).normalize();
+    emtxa.linear().col(2).normalize();
+    emtx_to_mtxa(emtxa);
 }
 
-void math_mtxa_push()
+void mtxa_push()
 {
     // Assertions do not appear in the original source
     assert(gs->mtx_stack_ptr > gs->mtx_stack);
@@ -295,7 +300,7 @@ void math_mtxa_push()
     memcpy(--gs->mtx_stack_ptr, &gs->mtxa_raw, sizeof(Mtx));
 }
 
-void math_mtxa_pop()
+void mtxa_pop()
 {
     // Assertions do not appear in the original source
     assert(gs->mtx_stack_ptr >= gs->mtx_stack);
@@ -304,17 +309,17 @@ void math_mtxa_pop()
     memcpy(&gs->mtxa_raw, gs->mtx_stack_ptr++, sizeof(Mtx));
 }
 
-void math_mtxa_to_mtx(Mtx *mtx)
+void mtxa_to_mtx(Mtx *mtx)
 {
     memcpy(mtx, &gs->mtxa_raw, sizeof(Mtx));
 }
 
-void math_mtxa_from_mtx(Mtx *mtx)
+void mtxa_from_mtx(Mtx *mtx)
 {
     memcpy(&gs->mtxa_raw, mtx, sizeof(Mtx));
 }
 
-void math_mtxa_peek()
+void mtxa_peek()
 {
     // Assertions do not appear in the original source
     assert(gs->mtx_stack_ptr >= gs->mtx_stack);
@@ -323,7 +328,7 @@ void math_mtxa_peek()
     memcpy(&gs->mtxa_raw, gs->mtx_stack_ptr, sizeof(Mtx));
 }
 
-void math_mtxa_sq_to_mtx(Mtx *mtx)
+void mtxa_sq_to_mtx(Mtx *mtx)
 {
     EigenMtx emtx(emtx_from_mtx(mtx));
     EigenMtx emtxa(emtx_from_mtxa());
@@ -331,7 +336,7 @@ void math_mtxa_sq_to_mtx(Mtx *mtx)
     emtx_to_mtx(emtx, mtx);
 }
 
-void math_mtxa_sq_from_mtx(Mtx *mtx)
+void mtxa_sq_from_mtx(Mtx *mtx)
 {
     EigenMtx emtx(emtx_from_mtx(mtx));
     EigenMtx emtxa(emtx_from_mtxa());
@@ -339,27 +344,27 @@ void math_mtxa_sq_from_mtx(Mtx *mtx)
     emtx_to_mtxa(emtxa);
 }
 
-void math_mtxa_from_mtxb()
+void mtxa_from_mtxb()
 {
     memcpy(&gs->mtxa_raw, &gs->mtxb_raw, sizeof(Mtx));
 }
 
-void math_mtxa_to_mtxb()
+void mtxa_to_mtxb()
 {
     memcpy(&gs->mtxb_raw, &gs->mtxa_raw, sizeof(Mtx));
 }
 
-void math_mtx_copy(Mtx *src, Mtx *dst)
+void mtx_copy(Mtx *src, Mtx *dst)
 {
     memcpy(dst, src, sizeof(Mtx));
 }
 
-void math_mtxa_invert()
+void mtxa_invert()
 {
     emtx_to_mtxa(emtx_from_mtxa().inverse());
 }
 
-void math_mtxa_transpose()
+void mtxa_transpose()
 {
     EigenMtx emtxa(emtx_from_mtxa());
     emtxa.linear().transposeInPlace();
@@ -367,32 +372,32 @@ void math_mtxa_transpose()
     emtx_to_mtxa(emtxa);
 }
 
-void math_mtxa_mult_right(Mtx *mtx)
+void mtxa_mult_right(Mtx *mtx)
 {
     emtx_to_mtxa(emtx_from_mtxa() * emtx_from_mtx(mtx));
 }
 
-void math_mtxa_mult_left(Mtx *mtx)
+void mtxa_mult_left(Mtx *mtx)
 {
     emtx_to_mtxa(emtx_from_mtx(mtx) * emtx_from_mtxa());
 }
 
-void math_mtxa_from_mtxb_mult_mtx(Mtx *mtx)
+void mtxa_from_mtxb_mult_mtx(Mtx *mtx)
 {
     emtx_to_mtxa(emtx_from_mtxb() * emtx_from_mtx(mtx));
 }
 
-void math_mtx_mult(Mtx *mtx1, Mtx *mtx2, Mtx *dst)
+void mtx_mult(Mtx *mtx1, Mtx *mtx2, Mtx *dst)
 {
     emtx_to_mtx(emtx_from_mtx(mtx1) * emtx_from_mtx(mtx2), dst);
 }
 
-void math_mtxa_tfset_point_v(Vec3f *point)
+void mtxa_tfset_point(Vec3f *point)
 {
-    math_mtxa_tfset_point(point->x, point->y, point->z);
+    mtxa_tfset_point_xyz(point->x, point->y, point->z);
 }
 
-void math_mtxa_tfset_point(f32 x, f32 y, f32 z)
+void mtxa_tfset_point_xyz(f32 x, f32 y, f32 z)
 {
     Eigen::Vector3f epoint(x, y, z);
     EigenMtx emtx(emtx_from_mtxa());
@@ -400,27 +405,27 @@ void math_mtxa_tfset_point(f32 x, f32 y, f32 z)
     emtx_to_mtxa(emtx);
 }
 
-void math_mtxa_tfset_neg_point_v(Vec3f *point)
+void mtxa_tfset_neg_point(Vec3f *point)
 {
-    math_mtxa_tfset_point(-point->x, -point->y, -point->z);
+    mtxa_tfset_point_xyz(-point->x, -point->y, -point->z);
 }
 
-void math_mtxa_tfset_neg_point(f32 x, f32 y, f32 z)
+void mtxa_tfset_neg_point_xyz(f32 x, f32 y, f32 z)
 {
-    math_mtxa_tfset_point(-x, -y, -z);
+    mtxa_tfset_point_xyz(-x, -y, -z);
 }
 
-void math_mtxa_mult_scale_v(Vec3f *scale)
+void mtxa_scale(Vec3f *scale)
 {
-    math_mtxa_mult_scale(scale->x, scale->y, scale->z);
+    mtxa_scale_xyz(scale->x, scale->y, scale->z);
 }
 
-void math_mtxa_mult_scale_s(f32 scale)
+void mtxa_scale_s(f32 scale)
 {
-    math_mtxa_mult_scale(scale, scale, scale);
+    mtxa_scale_xyz(scale, scale, scale);
 }
 
-void math_mtxa_mult_scale(f32 x, f32 y, f32 z)
+void mtxa_scale_xyz(f32 x, f32 y, f32 z)
 {
     gs->mtxa_raw[0][0] *= x;
     gs->mtxa_raw[1][0] *= x;
@@ -433,69 +438,101 @@ void math_mtxa_mult_scale(f32 x, f32 y, f32 z)
     gs->mtxa_raw[2][2] *= z;
 }
 
-void math_mtxa_tf_point_v(Vec3f *src, Vec3f *dst)
+void mtxa_tf_point(Vec3f *src, Vec3f *dst)
 {
-    math_mtxa_tf_point(src->x, src->y, src->z, dst);
+    mtxa_tf_point_xyz(src->x, src->y, src->z, dst);
 }
 
-void math_mtxa_tf_vec_v(Vec3f *src, Vec3f *dst)
+void mtxa_tf_vec(Vec3f *src, Vec3f *dst)
 {
-    math_mtxa_tf_vec(src->x, src->y, src->z, dst);
+    mtxa_tf_vec_xyz(src->x, src->y, src->z, dst);
 }
 
-void math_mtxa_tf_point(f32 x, f32 y, f32 z, Vec3f *dst)
+void mtxa_tf_point_xyz(f32 x, f32 y, f32 z, Vec3f *dst)
 {
     evec_to_vec3f(emtx_from_mtxa() * Eigen::Vector3f(x, y, z), dst);
 }
 
-void math_mtxa_tf_vec(f32 x, f32 y, f32 z, Vec3f *dst)
+void mtxa_tf_vec_xyz(f32 x, f32 y, f32 z, Vec3f *dst)
 {
     evec_to_vec3f(emtx_from_mtxa().linear() * Eigen::Vector3f(x, y, z), dst);
 }
 
-void math_tf_point_xz_by_mtxa_v(Vec3f *src, Vec3f *dst)
+void mtxa_rigid_inv_tf_point(Vec3f *src, Vec3f *dst)
 {
-    // TODO implement (also figure out what this even does)
+    mtxa_rigid_inv_tf_point_xyz(src->x, src->y, src->z, dst);
 }
 
-void math_mtxa_mult_rotate_x(s16 angle)
+void mtxa_rigid_inv_tf_point_xyz(f32 x, f32 y, f32 z, Vec3f *dst)
+{
+    f32 mtxa_x = gs->mtxa_raw[0][3];
+    f32 mtxa_y = gs->mtxa_raw[1][3];
+    f32 mtxa_z = gs->mtxa_raw[2][3];
+    mtxa_rigid_inv_tf_vec_xyz(x - mtxa_x, y - mtxa_y, z - mtxa_z, dst);
+}
+
+void mtxa_rigid_inv_tf_tl(Vec3f *dst)
+{
+    f32 x = gs->mtxa_raw[0][3];
+    f32 y = gs->mtxa_raw[1][3];
+    f32 z = gs->mtxa_raw[2][3];
+    mtxa_rigid_inv_tf_vec_xyz(x, y, z, dst);
+    dst->x = -dst->x;
+    dst->y = -dst->y;
+    dst->z = -dst->z;
+}
+
+void mtxa_rigid_inv_tf_vec(Vec3f *src, Vec3f *dst)
+{
+    mtxa_rigid_inv_tf_vec_xyz(src->x, src->y, src->z, dst);
+}
+
+void mtxa_rigid_inv_tf_vec_xyz(f32 x, f32 y, f32 z, Vec3f *dst)
+{
+    EigenMtx emtxa(emtx_from_mtxa());
+    Eigen::Vector3f evec(x, y, z);
+    evec = emtxa.linear().transpose() * evec;
+    evec_to_vec3f(evec, dst);
+}
+
+void mtxa_rotate_x(s16 angle)
 {
     emtx_to_mtxa(emtx_from_mtxa() * Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitX()));
 }
 
-void math_mtxa_mult_rotate_y(s16 angle)
+void mtxa_rotate_y(s16 angle)
 {
     emtx_to_mtxa(emtx_from_mtxa() * Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitY()));
 }
 
-void math_mtxa_mult_rotate_z(s16 angle)
+void mtxa_rotate_z(s16 angle)
 {
     emtx_to_mtxa(emtx_from_mtxa() * Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f::UnitZ()));
 }
 
-void math_mtxa_from_quat(Quat *quat)
+void mtxa_from_quat(Quat *quat)
 {
     emtx_to_mtxa(EigenMtx(Eigen::Quaternionf((f32 *) quat)));
 }
 
-void math_quat_mult(Quat *dst, Quat *left, Quat *right)
+void quat_mult(Quat *dst, Quat *left, Quat *right)
 {
     equat_to_quat(equat_from_quat(left) * equat_from_quat(right), dst);
 }
 
-void math_mtxa_to_quat(Quat *out_quat)
+void mtxa_to_quat(Quat *out_quat)
 {
     equat_to_quat(Eigen::Quaternionf(emtx_from_mtxa().rotation()), out_quat);
 }
 
-void math_quat_from_axis_angle(Quat *out_quat, Vec3f *axis, s16 angle)
+void quat_from_axis_angle(Quat *out_quat, Vec3f *axis, s16 angle)
 {
     // Unnecessary to first convert it to an Eigen transform?
     EigenMtx m(Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f((f32 *) axis)));
     equat_to_quat(Eigen::Quaternionf(m.rotation()), out_quat);
 }
 
-double math_quat_to_axis_angle(Quat *quat, Vec3f *out_axis)
+double quat_to_axis_angle(Quat *quat, Vec3f *out_axis)
 {
     Eigen::Vector3f axis(quat->x, quat->y, quat->z);
     axis.normalize();
@@ -503,12 +540,12 @@ double math_quat_to_axis_angle(Quat *quat, Vec3f *out_axis)
     return 2.0 * acos(quat->w);
 }
 
-void math_quat_normalize(Quat *quat)
+void quat_normalize(Quat *quat)
 {
     equat_to_quat(equat_from_quat(quat).normalized(), quat);
 }
 
-void math_quat_from_vecs(Quat *out_quat, Vec3f *start, Vec3f *end)
+void quat_from_vecs(Quat *out_quat, Vec3f *start, Vec3f *end)
 {
     Eigen::Vector3f estart((f32 *) start);
     Eigen::Vector3f eend((f32 *) end);
@@ -516,7 +553,7 @@ void math_quat_from_vecs(Quat *out_quat, Vec3f *start, Vec3f *end)
     equat_to_quat(q, out_quat);
 }
 
-void math_quat_slerp(f32 t, Quat *dst, Quat *quat1, Quat *quat2)
+void quat_slerp(f32 t, Quat *dst, Quat *quat1, Quat *quat2)
 {
     Eigen::Quaternionf q1(equat_from_quat(quat1));
     Eigen::Quaternionf q2(equat_from_quat(quat2));
@@ -524,42 +561,42 @@ void math_quat_slerp(f32 t, Quat *dst, Quat *quat1, Quat *quat2)
     equat_to_quat(result, dst);
 }
 
-void math_ray_to_euler(Vec3f *ray_start, Vec3f *ray_end, Vec3s *out_rot)
+void ray_to_euler(Vec3f *ray_start, Vec3f *ray_end, Vec3s *out_rot)
 {
-    // The original game reimplements the logic here instead of calling `math_vec_to_euler()`
+    // The original game reimplements the logic here instead of calling `vec_to_euler()`
     Vec3f vec = VEC_SUB(*ray_end, *ray_start);
-    math_vec_to_euler(&vec, out_rot);
+    vec_to_euler(&vec, out_rot);
 }
 
-void math_ray_to_euler_xy(Vec3f *ray_start, Vec3f *ray_end, s16 *out_rot_x, s16 *out_rot_y)
+void ray_to_euler_xy(Vec3f *ray_start, Vec3f *ray_end, s16 *out_rot_x, s16 *out_rot_y)
 {
-    // The original game reimplements the logic here instead of calling `math_vec_to_euler_xy()`
+    // The original game reimplements the logic here instead of calling `vec_to_euler_xy()`
     Vec3f vec = VEC_SUB(*ray_end, *ray_start);
-    math_vec_to_euler_xy(&vec, out_rot_x, out_rot_y);
+    vec_to_euler_xy(&vec, out_rot_x, out_rot_y);
 }
 
-void math_vec_to_euler(Vec3f *vec, Vec3s *out_rot)
+void vec_to_euler(Vec3f *vec, Vec3s *out_rot)
 {
-    // The original game reimplements the logic here instead of calling `math_vec_to_euler_xy()`
-    math_vec_to_euler_xy(vec, &out_rot->x, &out_rot->y);
+    // The original game reimplements the logic here instead of calling `vec_to_euler_xy()`
+    vec_to_euler_xy(vec, &out_rot->x, &out_rot->y);
     out_rot->z = 0.f;
 }
 
-void math_vec_to_euler_xy(Vec3f *vec, s16 *out_rot_x, s16 *out_rot_y)
+void vec_to_euler_xy(Vec3f *vec, s16 *out_rot_x, s16 *out_rot_y)
 {
-    f32 len2d = math_sqrt(vec->x * vec->x + vec->z * vec->z);
-    *out_rot_y = math_atan2(vec->y, len2d);
+    f32 len2d = sqrt(vec->x * vec->x + vec->z * vec->z);
+    *out_rot_y = atan2(vec->y, len2d);
     *out_rot_x = math_atan2(-vec->x, -vec->z);
 }
 
-void math_mtxa_to_euler(s16 *out_rot_y, s16 *out_rot_x, s16 *out_rot_z)
+void mtxa_to_euler_yxz(s16 *out_rot_y, s16 *out_rot_x, s16 *out_rot_z)
 {
-    math_mtxa_push();
+    mtxa_push();
 
     Vec3f forward = {0.f, 0.f, -1.f};
     Vec3f up = {0.f, 1.f, 0.f};
-    math_mtxa_tf_point_v(&forward, &forward);
-    math_mtxa_tf_point_v(&up, &up);
+    mtxa_tf_point(&forward, &forward);
+    mtxa_tf_point(&up, &up);
 
     f32 forward_len2d = math_sqrt(forward.x * forward.x + forward.z * forward.z);
     *out_rot_x = math_atan2(forward.y, forward_len2d);
@@ -569,18 +606,18 @@ void math_mtxa_to_euler(s16 *out_rot_y, s16 *out_rot_x, s16 *out_rot_z)
     *out_rot_y = math_atan2(forward.x, forward.z) + 0x8000;
 
     // I think this undoes this X and Y rotation on the up vector, leaving only the Z rotation
-    math_mtxa_from_rotate_y(*out_rot_y);
-    math_mtxa_mult_rotate_x(*out_rot_x);
-    math_tf_point_xz_by_mtxa_v(&up, &up);
+    mtxa_from_rotate_y(*out_rot_y);
+    mtxa_rotate_x(*out_rot_x);
+    mtxa_rigid_inv_tf_vec(&up, &up);
     *out_rot_z = -math_atan2(up.x, up.y);
 
-    math_mtxa_pop();
+    mtxa_pop();
 }
 
-void math_mtxa_to_euler_v(Vec3s *out_rot)
+void mtxa_to_euler(Vec3s *out_rot)
 {
-    // The original game reimplements the logic here instead of calling `math_mtxa_to_euler()`
-    math_mtxa_to_euler(&out_rot->y, &out_rot->x, &out_rot->z);
+    // The original game reimplements the logic here instead of calling `mtxa_to_euler_yxz()`
+    mtxa_to_euler_yxz(&out_rot->y, &out_rot->x, &out_rot->z);
 }
 
 }

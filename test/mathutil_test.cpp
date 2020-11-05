@@ -268,7 +268,7 @@ TEST_CASE("math_sin_cos_v()", "[mathutil]")
     CHECK(arr1.f[0] == Approx(arr2.f[0]));
 }
 
-TEST_CASE("math_vec_dot_normalized_*()", "[mathutil]")
+TEST_CASE("vec_dot_normalized_*()", "[mathutil]")
 {
     Ufvec vec1, vec2, vec3, vec4, vec5;
     vec1.f = {-0.5f, -1.f, 0.3};
@@ -279,73 +279,82 @@ TEST_CASE("math_vec_dot_normalized_*()", "[mathutil]")
 
     Uf result, expected;
 
-    result.f = math_vec_dot_normalized_safe(&vec1.f, &vec2.f);
+    result.f = vec_dot_normalized_safe(&vec1.f, &vec2.f);
     expected.u = 0x3f4e8add;
     CHECK(result.f == Approx(expected.f));
 
-    result.f = math_vec_dot_normalized_safe(&vec1.f, &vec3.f);
+    result.f = vec_dot_normalized_safe(&vec1.f, &vec3.f);
     expected.u = 0xbf4e8add;
     CHECK(result.f == Approx(expected.f));
 
-    result.f = math_vec_dot_normalized_safe(&vec1.f, &vec4.f);
+    result.f = vec_dot_normalized_safe(&vec1.f, &vec4.f);
     expected.u = 0x00000000;
     CHECK(result.f == Approx(expected.f));
 
-    result.f = math_vec_dot_normalized_safe(&vec1.f, &vec5.f);
+    result.f = vec_dot_normalized_safe(&vec1.f, &vec5.f);
     expected.u = 0x7f800000;
     CHECK(result.f == Approx(expected.f));
 
-    result.f = math_vec_dot_normalized_safe(&vec4.f, &vec4.f);
+    result.f = vec_dot_normalized_safe(&vec4.f, &vec4.f);
     expected.u = 0x00000000;
     CHECK(result.f == Approx(expected.f));
 
-    result.f = math_vec_dot_normalized(&vec1.f, &vec2.f);
+    result.f = vec_dot_normalized(&vec1.f, &vec2.f);
     expected.u = 0x3f4e8add;
     CHECK(result.f == Approx(expected.f));
 
-    result.f = math_vec_dot_normalized(&vec1.f, &vec3.f);
+    result.f = vec_dot_normalized(&vec1.f, &vec3.f);
     expected.u = 0xbf4e8add;
     CHECK(result.f == Approx(expected.f));
 
-    result.f = math_vec_dot_normalized(&vec1.f, &vec4.f);
+    result.f = vec_dot_normalized(&vec1.f, &vec4.f);
     expected.u = 0xffc00000;
     CHECK(isnan(result.f));
 
-    result.f = math_vec_dot_normalized(&vec1.f, &vec5.f);
+    result.f = vec_dot_normalized(&vec1.f, &vec5.f);
     expected.u = 0xffc00000;
     CHECK(isnan(result.f));
 
-    result.f = math_vec_dot_normalized(&vec4.f, &vec4.f);
+    result.f = vec_dot_normalized(&vec4.f, &vec4.f);
     expected.u = 0xffc00000;
     CHECK(isnan(result.f));
 }
 
-TEST_CASE("math_ray_scale()", "[mathutil]")
+TEST_CASE("ray_scale()", "[mathutil]")
 {
     Ufvec vec1, vec2, result, expected;
     vec1.f = {-0.5f, -1.f, 0.3};
     vec2.f = {-0.25f, -1.83f, 2.032f};
     expected = {0xbf966666, 0x3f9ed918, 0xc08c0b78};
-    math_ray_scale(-2.7f, &vec1.f, &vec2.f, &result.f);
+    ray_scale(-2.7f, &vec1.f, &vec2.f, &result.f);
     check_vec3f(&result.f, &expected.f);
 }
 
-TEST_CASE("math_vec_normalize_len()", "[mathutil]")
+TEST_CASE("vec_set_len()", "[mathutil]")
+{
+    Ufvec vec1, result, expected;
+    vec1.f = {-0.5f, -1.f, 0.3};
+    vec_set_len(250.f, &vec1.f, &result.f);
+    expected = {0xc2d7f795, 0xc357f795, 0x4281948d};
+    check_vec3f(&result.f, &expected.f);
+}
+
+TEST_CASE("vec_normalize_len()", "[mathutil]")
 {
     Ufvec vec1, expected;
     Uf expected_len;
     expected_len.u = 0x3f942bb5;
     vec1.f = {-0.5f, -1.f, 0.3};
     expected = {0xbedd267c, 0xbf5d267c, 0x3e84b0b1};
-    f32 len = math_vec_normalize_len(&vec1.f);
+    f32 len = vec_normalize_len(&vec1.f);
     check_vec3f(&vec1.f, &expected.f);
     CHECK(len == Approx(expected_len.f));
 }
 
-TEST_CASE("math_mtxa_from_identity()", "[mathutil]")
+TEST_CASE("mtxa_from_identity()", "[mathutil]")
 {
     load_dummy_mtxa();
-    math_mtxa_from_identity();
+    mtxa_from_identity();
     Ufmtx m = {
         0x3f800000, 0x00000000, 0x00000000, 0x00000000,
         0x00000000, 0x3f800000, 0x00000000, 0x00000000,
@@ -354,10 +363,10 @@ TEST_CASE("math_mtxa_from_identity()", "[mathutil]")
     check_mtxa(m);
 }
 
-TEST_CASE("math_mtx_from_identity()", "[mathutil]")
+TEST_CASE("mtx_from_identity()", "[mathutil]")
 {
     Ufmtx result;
-    math_mtx_from_identity(&result.f);
+    mtx_from_identity(&result.f);
     Ufmtx expected = {
         0x3f800000, 0x00000000, 0x00000000, 0x00000000,
         0x00000000, 0x3f800000, 0x00000000, 0x00000000,
@@ -366,10 +375,10 @@ TEST_CASE("math_mtx_from_identity()", "[mathutil]")
     check_mtx(&result.f, &expected.f);
 }
 
-TEST_CASE("math_mtxa_sq_from_identity()", "[mathutil]")
+TEST_CASE("mtxa_sq_from_identity()", "[mathutil]")
 {
     load_dummy_mtxa();
-    math_mtxa_sq_from_identity();
+    mtxa_sq_from_identity();
     Ufmtx result = {
         0x3f800000, 0x00000000, 0x00000000, 0x41cac4b1,
         0x00000000, 0x3f800000, 0x00000000, 0xbf0b1162,
@@ -378,10 +387,34 @@ TEST_CASE("math_mtxa_sq_from_identity()", "[mathutil]")
     check_mtxa(result);
 }
 
-TEST_CASE("math_mtxa_from_rotate_x()", "[mathutil]")
+TEST_CASE("mtxa_from_identity_tl_xyz*()", "[mathutil]")
+{
+    Ufmtx expected;
+    Ufvec vec1;
+    vec1.f = {-0.5f, -1.f, 0.3};
+    load_dummy_mtxa();
+    mtxa_from_identity_tl(&vec1.f);
+    expected = {
+        0x3f800000, 0x00000000, 0x00000000, 0xbf000000,
+        0x00000000, 0x3f800000, 0x00000000, 0xbf800000,
+        0x00000000, 0x00000000, 0x3f800000, 0x3e99999a,
+    };
+    check_mtxa(expected);
+
+    load_dummy_mtxa();
+    mtxa_from_identity_tl_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
+    expected = {
+        0x3f800000, 0x00000000, 0x00000000, 0xbf000000,
+        0x00000000, 0x3f800000, 0x00000000, 0xbf800000,
+        0x00000000, 0x00000000, 0x3f800000, 0x3e99999a,
+    };
+    check_mtxa(expected);
+}
+
+TEST_CASE("mtxa_from_rotate_x()", "[mathutil]")
 {
     load_dummy_mtxa();
-    math_mtxa_from_rotate_x(0x38a5);
+    mtxa_from_rotate_x(0x38a5);
     Ufmtx m = {
         0x3f800000, 0x00000000, 0x00000000, 0x00000000,
         0x00000000, 0x3e37dc4e, 0xbf7bd6f3, 0x00000000,
@@ -390,10 +423,10 @@ TEST_CASE("math_mtxa_from_rotate_x()", "[mathutil]")
     check_mtxa(m);
 }
 
-TEST_CASE("math_mtxa_from_rotate_y()", "[mathutil]")
+TEST_CASE("mtxa_from_rotate_y()", "[mathutil]")
 {
     load_dummy_mtxa();
-    math_mtxa_from_rotate_y(0x38a5);
+    mtxa_from_rotate_y(0x38a5);
     Ufmtx m = {
         0x3e37dc4e, 0x00000000, 0x3f7bd6f3, 0x00000000,
         0x00000000, 0x3f800000, 0x00000000, 0x00000000,
@@ -402,10 +435,10 @@ TEST_CASE("math_mtxa_from_rotate_y()", "[mathutil]")
     check_mtxa(m);
 }
 
-TEST_CASE("math_mtxa_from_rotate_z()", "[mathutil]")
+TEST_CASE("mtxa_from_rotate_z()", "[mathutil]")
 {
     load_dummy_mtxa();
-    math_mtxa_from_rotate_z(0x38a5);
+    mtxa_from_rotate_z(0x38a5);
     Ufmtx m = {
         0x3e37dc4e, 0xbf7bd6f3, 0x00000000, 0x00000000,
         0x3f7bd6f3, 0x3e37dc4e, 0x00000000, 0x00000000,
@@ -414,14 +447,14 @@ TEST_CASE("math_mtxa_from_rotate_z()", "[mathutil]")
     check_mtxa(m);
 }
 
-TEST_CASE("math_mtxa_from_mtxb_tfset_point*()", "[mathutil]")
+TEST_CASE("mtxa_from_mtxb_tfset_point_xyz*()", "[mathutil]")
 {
     Ufvec vec1;
     Ufmtx result;
     vec1.f = {-0.5f, -1.f, 0.3};
     load_dummy_mtxa();
     load_dummy_mtxb();
-    math_mtxa_from_mtxb_tfset_point_v(&vec1.f);
+    mtxa_from_mtxb_tfset_point(&vec1.f);
     result = {
         0x3eb22ba4, 0x3f182165, 0xbf399fa9, 0x415780ad,
         0x3da5dd28, 0xbf4a230c, 0xbf1bb6bf, 0xc0c1d985,
@@ -431,7 +464,7 @@ TEST_CASE("math_mtxa_from_mtxb_tfset_point*()", "[mathutil]")
 
     load_dummy_mtxa();
     load_dummy_mtxb();
-    math_mtxa_from_mtxb_tfset_point(vec1.f.x, vec1.f.y, vec1.f.z);
+    mtxa_from_mtxb_tfset_point_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
     result = {
         0x3eb22ba4, 0x3f182165, 0xbf399fa9, 0x415780ad,
         0x3da5dd28, 0xbf4a230c, 0xbf1bb6bf, 0xc0c1d985,
@@ -440,32 +473,31 @@ TEST_CASE("math_mtxa_from_mtxb_tfset_point*()", "[mathutil]")
     check_mtxa(result);
 }
 
-TEST_CASE("math_mtxa_sq_normalize()", "[mathlib]")
+TEST_CASE("mtxa_normalize_basis()", "[mathlib]")
 {
-    // TODO
-//    Ufmtx ufmtx = {
-//        0x3cfbd060, 0xbf377c0a, 0x3f3258ba, 0x41cac4b1,
-//        0xbe163ac7, 0x3f2fab90, 0x3f36635d, 0xbf0b1162,
-//        0xbf7d1b94, 0xbdfe2bdd, 0xbdac2690, 0xc22c6076,
-//    };
-//    load_dummy_mtxa();
-//    math_mtxa_mult_scale_s(100.f);
-//    math_mtxa_sq_normalize();
-//    check_mtxa(ufmtx);
+    load_dummy_mtxa();
+    mtxa_scale_xyz(0.3f, 24.3f, -0.52f);
+    mtxa_normalize_basis();
+    Ufmtx expected = {
+        0x3cfbd05e, 0xbf377c09, 0xbf3258ba, 0x41cac4b1,
+        0xbe163ac7, 0x3f2fab8f, 0xbf36635d, 0xbf0b1162,
+        0xbf7d1b93, 0xbdfe2bdb, 0x3dac2691, 0xc22c6076,
+    };
+    check_mtxa(expected);
 }
 
 TEST_CASE("mtx stack", "[mathlib]")
 {
     Ufmtx first_pop, first_peek, second_pop, third_pop;
 
-    math_mtxa_from_identity();
-    math_mtxa_push();
+    mtxa_from_identity();
+    mtxa_push();
     load_dummy_mtxa();
-    math_mtxa_push();
+    mtxa_push();
     load_dummy_mtxb();
-    math_mtxa_from_mtxb();
-    math_mtxa_push();
-    math_mtxa_from_identity();
+    mtxa_from_mtxb();
+    mtxa_push();
+    mtxa_from_identity();
 
     first_pop = {
         0x3eb22ba4, 0x3f182165, 0xbf399fa9, 0x41674670,
@@ -488,14 +520,14 @@ TEST_CASE("mtx stack", "[mathlib]")
         0x00000000, 0x00000000, 0x3f800000, 0x00000000,
     };
 
-    math_mtxa_pop();
+    mtxa_pop();
     check_mtxa(first_pop);
-    math_mtxa_peek();
-    math_mtxa_peek();
+    mtxa_peek();
+    mtxa_peek();
     check_mtxa(first_peek);
-    math_mtxa_pop();
+    mtxa_pop();
     check_mtxa(second_pop);
-    math_mtxa_pop();
+    mtxa_pop();
     check_mtxa(third_pop);
 }
 
@@ -504,8 +536,8 @@ TEST_CASE("mtx square copying", "[mathutil]")
     Ufmtx expected;
 
     Ufmtx mtx = gen_dummy_ufmtx1();
-    math_mtxa_from_identity();
-    math_mtxa_sq_from_mtx(&mtx.f);
+    mtxa_from_identity();
+    mtxa_sq_from_mtx(&mtx.f);
     expected = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x00000000,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0x00000000,
@@ -515,7 +547,7 @@ TEST_CASE("mtx square copying", "[mathutil]")
 
     mtx = gen_dummy_ufmtx2();
     load_dummy_mtxa();
-    math_mtxa_sq_to_mtx(&mtx.f);
+    mtxa_sq_to_mtx(&mtx.f);
     expected = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41674670,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xc0d3fb52,
@@ -526,31 +558,31 @@ TEST_CASE("mtx square copying", "[mathutil]")
 
 TEST_CASE("mtx copying", "[mathutil]")
 {
-    // math_mtxa_to_mtx() identity:
+    // mtxa_to_mtx() identity:
     Ufmtx ufmtx1 = {
         0x3f800000, 0x00000000, 0x00000000, 0x00000000,
         0x00000000, 0x3f800000, 0x00000000, 0x00000000,
         0x00000000, 0x00000000, 0x3f800000, 0x00000000,
     };
-    // math_mtxa_from_mtx() dummy:
+    // mtxa_from_mtx() dummy:
     Ufmtx ufmtx2 = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41cac4b1,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf0b1162,
         0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22c6076,
     };
-    // math_mtxa_from_mtxb() dummy:
+    // mtxa_from_mtxb() dummy:
     Ufmtx ufmtx3 = {
         0x3eb22ba4, 0x3f182165, 0xbf399fa9, 0x41674670,
         0x3da5dd28, 0xbf4a230c, 0xbf1bb6bf, 0xc0d3fb52,
         0xbf6f1a37, 0x3e1c9d17, 0xbea55310, 0xbc8b3933,
     };
-        // math_mtxa_to_mtxb() dummy:
+        // mtxa_to_mtxb() dummy:
     Ufmtx ufmtx4 = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41cac4b1,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf0b1162,
         0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22c6076,
     };
-    // math_mtx_copy() mtxb:
+    // mtx_copy() mtxb:
     Ufmtx ufmtx5 = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41cac4b1,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf0b1162,
@@ -558,31 +590,31 @@ TEST_CASE("mtx copying", "[mathutil]")
     };
 
     Ufmtx mtx1, mtx2;
-    math_mtxa_from_identity();
-    math_mtxa_to_mtx(&mtx1.f);
-    math_mtxa_to_mtx(&mtx2.f);
+    mtxa_from_identity();
+    mtxa_to_mtx(&mtx1.f);
+    mtxa_to_mtx(&mtx2.f);
     check_mtx(&mtx1.f, &ufmtx1.f);
 
     mtx1 = gen_dummy_ufmtx1();
-    math_mtxa_from_mtx(&mtx1.f);
+    mtxa_from_mtx(&mtx1.f);
     check_mtxa(ufmtx2);
 
     load_dummy_mtxb();
-    math_mtxa_from_mtxb();
+    mtxa_from_mtxb();
     check_mtxa(ufmtx3);
 
     load_dummy_mtxa();
-    math_mtxa_to_mtxb();
+    mtxa_to_mtxb();
     check_mtxb(ufmtx4);
 
-    math_mtx_copy(&mtx1.f, &mtx2.f);
+    mtx_copy(&mtx1.f, &mtx2.f);
     check_mtx(&mtx2.f, &ufmtx5.f);
 }
 
-TEST_CASE("math_mtxa_invert()", "[mathutil]")
+TEST_CASE("mtxa_invert()", "[mathutil]")
 {
     load_dummy_mtxa();
-    math_mtxa_invert();
+    mtxa_invert();
     Ufmtx mtx = {
         0x3cfbd06a, 0xbe163ac9, 0xbf7d1b94, 0xc22ddd52,
         0xbf377c0a, 0x3f2fab91, 0xbdfe2bdb, 0x41530df8,
@@ -591,10 +623,10 @@ TEST_CASE("math_mtxa_invert()", "[mathutil]")
     check_mtxa(mtx);
 }
 
-TEST_CASE("math_mtxa_transpose()", "[mathutil]")
+TEST_CASE("mtxa_transpose()", "[mathutil]")
 {
     load_dummy_mtxa();
-    math_mtxa_transpose();
+    mtxa_transpose();
     Ufmtx mtx = {
         0x3cfbd060, 0xbe163ac8, 0xbf7d1b94, 0xc22ddd52,
         0xbf377c09, 0x3f2fab90, 0xbdfe2bdc, 0x41530df5,
@@ -609,7 +641,7 @@ TEST_CASE("math mtx mult", "[mathutil]")
 
     load_dummy_mtxa();
     Ufmtx mtx = gen_dummy_ufmtx2();
-    math_mtxa_mult_right(&mtx.f);
+    mtxa_mult_right(&mtx.f);
     result = {
         0xbf32b240, 0x3f30d502, 0x3e413f62, 0x41f43642,
         0xbf293115, 0xbf0521ee, 0xbf0a8358, 0xc0e7186a,
@@ -618,7 +650,7 @@ TEST_CASE("math mtx mult", "[mathutil]")
     check_mtxa(result);
 
     load_dummy_mtxa();
-    math_mtxa_mult_left(&mtx.f);
+    mtxa_mult_left(&mtx.f);
     result = {
         0x3f23f231, 0x3e7e5231, 0x3f3a0d3d, 0x4258cc16,
         0x3f383f45, 0xbf063e5b, 0xbee8f5dd, 0x41b08e8a,
@@ -628,7 +660,7 @@ TEST_CASE("math mtx mult", "[mathutil]")
 
     mtx = gen_dummy_ufmtx1();
     load_dummy_mtxb();
-    math_mtxa_from_mtxb_mult_mtx(&mtx.f);
+    mtxa_from_mtxb_mult_mtx(&mtx.f);
     result = {
         0x3f23f231, 0x3e7e5231, 0x3f3a0d3d, 0x4258cc16,
         0x3f383f45, 0xbf063e5b, 0xbee8f5dd, 0x41b08e8a,
@@ -639,7 +671,7 @@ TEST_CASE("math mtx mult", "[mathutil]")
     Ufmtx mtx_left = gen_dummy_ufmtx1();
     Ufmtx mtx_right = gen_dummy_ufmtx2();
     Ufmtx result2;
-    math_mtx_mult(&mtx_left.f, &mtx_right.f, &result2.f);
+    mtx_mult(&mtx_left.f, &mtx_right.f, &result2.f);
     result = {
         0xbf32b240, 0x3f30d502, 0x3e413f62, 0x41f43642,
         0xbf293115, 0xbf0521ee, 0xbf0a8358, 0xc0e7186a,
@@ -655,7 +687,7 @@ TEST_CASE("math mtxa tfset", "[mathutil]")
 
     vec1.f = {-0.5f, -1.f, 0.3};
     load_dummy_mtxa();
-    math_mtxa_tfset_point_v(&vec1.f);
+    mtxa_tfset_point(&vec1.f);
     expected = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41d20d1f,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf713e30,
@@ -664,7 +696,7 @@ TEST_CASE("math mtxa tfset", "[mathutil]")
     check_mtxa(expected);
 
     load_dummy_mtxa();
-    math_mtxa_tfset_point(vec1.f.x, vec1.f.y, vec1.f.z);
+    mtxa_tfset_point_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
     expected = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41d20d1f,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf713e30,
@@ -673,7 +705,7 @@ TEST_CASE("math mtxa tfset", "[mathutil]")
     check_mtxa(expected);
 
     load_dummy_mtxa();
-    math_mtxa_tfset_neg_point_v(&vec1.f);
+    mtxa_tfset_neg_point(&vec1.f);
     expected = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41c37c43,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbe13924e,
@@ -682,11 +714,92 @@ TEST_CASE("math mtxa tfset", "[mathutil]")
     check_mtxa(expected);
 
     load_dummy_mtxa();
-    math_mtxa_tfset_neg_point(vec1.f.x, vec1.f.y, vec1.f.z);
+    mtxa_tfset_neg_point_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
     expected = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41c37c43,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbe13924e,
         0xbf7d1b94, 0xbdfe2bdc, 0xbdac2690, 0xc22ebff1,
     };
     check_mtxa(expected);
+}
+
+TEST_CASE("mtxa_scale_xyz*()", "[mathutil]")
+{
+    Ufmtx expected;
+    load_dummy_mtxa();
+    Ufvec vec1;
+    vec1.f = {-0.5f, -1.f, 0.3};
+    mtxa_scale(&vec1.f);
+    expected = {
+        0xbc7bd060, 0x3f377c09, 0x3e560413, 0x41cac4b1,
+        0x3d963ac8, 0xbf2fab90, 0x3e5adda2, 0xbf0b1162,
+        0x3efd1b94, 0x3dfe2bdc, 0xbcce94ad, 0xc22c6076,
+    };
+    check_mtxa(expected);
+
+    load_dummy_mtxa();
+    mtxa_scale_s(7.3f);
+    expected = {
+        0x3e65c7be, 0xc0a76dfc, 0x40a2bdc4, 0x41cac4b1,
+        0xbf8915a4, 0x40a04c8d, 0x40a66dde, 0xbf0b1162,
+        0xc0e6f5f7, 0xbf67ee6c, 0xbf1d1664, 0xc22c6076,
+    };
+    check_mtxa(expected);
+
+    load_dummy_mtxa();
+    mtxa_scale_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
+    expected = {
+        0xbc7bd060, 0x3f377c09, 0x3e560413, 0x41cac4b1,
+        0x3d963ac8, 0xbf2fab90, 0x3e5adda2, 0xbf0b1162,
+        0x3efd1b94, 0x3dfe2bdc, 0xbcce94ad, 0xc22c6076,
+    };
+    check_mtxa(expected);
+}
+
+TEST_CASE("math_mtxa_rigid_inv_tf*()", "[mathutil]")
+{
+    Ufvec vec1, dst, expected;
+    vec1.f = {-0.5f, -1.f, 0.3};
+
+    // Load dummy rigid transform into Matrix A
+    mtxa_from_identity_tl_xyz(0.1f, -4.2f, 7.5f);
+    mtxa_rotate_x(0x38a0);
+    mtxa_rotate_y(-0x6803);
+    mtxa_rotate_z(0xc800);
+
+    mtxa_rigid_inv_tf_point(&vec1.f, &dst.f);
+    expected = {0x40bfe8dd, 0xc04cd244, 0x4080ec73};
+    check_vec3f(&dst.f, &expected.f);
+
+    mtxa_rigid_inv_tf_point_xyz(vec1.f.x, vec1.f.y, vec1.f.z, &dst.f);
+    expected = {0x40bfe8dd, 0xc04cd244, 0x4080ec73};
+    check_vec3f(&dst.f, &expected.f);
+
+    mtxa_rigid_inv_tf_tl(&dst.f);
+    expected = {0x40bd53f4, 0xc08643e2, 0x4093a727};
+    check_vec3f(&dst.f, &expected.f);
+
+    mtxa_rigid_inv_tf_vec(&vec1.f, &dst.f);
+    expected = {0x3da53a42, 0x3f7ed5fb, 0xbf15d59d};
+    check_vec3f(&dst.f, &expected.f);
+
+    mtxa_rigid_inv_tf_vec_xyz(vec1.f.x, vec1.f.y, vec1.f.z, &dst.f);
+    expected = {0x3da53a42, 0x3f7ed5fb, 0xbf15d59d};
+    check_vec3f(&dst.f, &expected.f);
+}
+
+TEST_CASE("inverse rotation mtx equals inverse mtx", "[mathutil]")
+{
+    mtxa_from_identity_tl_xyz(0.1f, -4.2f, 7.5f);
+    mtxa_rotate_x(0x38a0);
+    mtxa_rotate_y(-0x6803);
+    mtxa_rotate_z(0xc800);
+    mtxa_to_mtxb();
+    mtxa_transpose();
+    Ufmtx rot_inv, inv;
+    mtxa_to_mtx(&rot_inv.f);
+    mtxa_from_mtxb();
+    mtxa_invert();
+    mtxa_to_mtx(&inv.f);
+    check_mtx(&rot_inv.f, &inv.f);
 }
