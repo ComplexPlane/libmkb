@@ -5,12 +5,18 @@
 
 using namespace mkb2;
 
-// Useful for comparing exact floating-point values with the original game
+// Useful unions for comparing exact floating-point values with the original game
 
 union Uf
 {
     u32 u;
     f32 f;
+};
+
+union Ud
+{
+    u64 u;
+    f64 d;
 };
 
 union Uf32
@@ -43,6 +49,12 @@ union Ufvec
     Vec3f f;
 };
 
+union Ufquat
+{
+    u32 u[4];
+    Quat f;
+};
+
 void check_mtx(const Mtx *result, const Mtx *expected)
 {
     CHECK((*result)[0][0] == Approx((*expected)[0][0]));
@@ -73,32 +85,17 @@ void check_mtxb(const Ufmtx &ufmtx)
 
 void check_vec3f(Vec3f *result, Vec3f *expected)
 {
-    if (isnan(expected->x))
-    {
-        CHECK(isnan(result->x));
-    }
-    else
-    {
-        CHECK(result->x == Approx(expected->x));
-    }
+    if (isnan(expected->x)) CHECK(isnan(result->x)); else CHECK(result->x == Approx(expected->x));
+    if (isnan(expected->y)) CHECK(isnan(result->y)); else CHECK(result->y == Approx(expected->y));
+    if (isnan(expected->z)) CHECK(isnan(result->z)); else CHECK(result->z == Approx(expected->z));
+}
 
-    if (isnan(expected->y))
-    {
-        CHECK(isnan(result->y));
-    }
-    else
-    {
-        CHECK(result->y == Approx(expected->y));
-    }
-
-    if (isnan(expected->z))
-    {
-        CHECK(isnan(result->z));
-    }
-    else
-    {
-        CHECK(result->z == Approx(expected->z));
-    }
+void check_quat(Quat *result, Quat *expected)
+{
+    if (isnan(expected->x)) CHECK(isnan(result->x)); else CHECK(result->x == Approx(expected->x));
+    if (isnan(expected->y)) CHECK(isnan(result->y)); else CHECK(result->y == Approx(expected->y));
+    if (isnan(expected->z)) CHECK(isnan(result->z)); else CHECK(result->z == Approx(expected->z));
+    if (isnan(expected->w)) CHECK(isnan(result->w)); else CHECK(result->w == Approx(expected->w));
 }
 
 /*
@@ -387,13 +384,13 @@ TEST_CASE("mtxa_sq_from_identity()", "[mathutil]")
     check_mtxa(result);
 }
 
-TEST_CASE("mtxa_from_identity_tl_xyz*()", "[mathutil]")
+TEST_CASE("mtxa_from_translate_xyz*()", "[mathutil]")
 {
     Ufmtx expected;
     Ufvec vec1;
     vec1.f = {-0.5f, -1.f, 0.3};
     load_dummy_mtxa();
-    mtxa_from_identity_tl(&vec1.f);
+    mtxa_from_translate(&vec1.f);
     expected = {
         0x3f800000, 0x00000000, 0x00000000, 0xbf000000,
         0x00000000, 0x3f800000, 0x00000000, 0xbf800000,
@@ -402,7 +399,7 @@ TEST_CASE("mtxa_from_identity_tl_xyz*()", "[mathutil]")
     check_mtxa(expected);
 
     load_dummy_mtxa();
-    mtxa_from_identity_tl_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
+    mtxa_from_translate_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
     expected = {
         0x3f800000, 0x00000000, 0x00000000, 0xbf000000,
         0x00000000, 0x3f800000, 0x00000000, 0xbf800000,
@@ -447,14 +444,14 @@ TEST_CASE("mtxa_from_rotate_z()", "[mathutil]")
     check_mtxa(m);
 }
 
-TEST_CASE("mtxa_from_mtxb_tfset_point_xyz*()", "[mathutil]")
+TEST_CASE("mtxa_from_mtxb_translate_xyz*()", "[mathutil]")
 {
     Ufvec vec1;
     Ufmtx result;
     vec1.f = {-0.5f, -1.f, 0.3};
     load_dummy_mtxa();
     load_dummy_mtxb();
-    mtxa_from_mtxb_tfset_point(&vec1.f);
+    mtxa_from_mtxb_translate(&vec1.f);
     result = {
         0x3eb22ba4, 0x3f182165, 0xbf399fa9, 0x415780ad,
         0x3da5dd28, 0xbf4a230c, 0xbf1bb6bf, 0xc0c1d985,
@@ -464,7 +461,7 @@ TEST_CASE("mtxa_from_mtxb_tfset_point_xyz*()", "[mathutil]")
 
     load_dummy_mtxa();
     load_dummy_mtxb();
-    mtxa_from_mtxb_tfset_point_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
+    mtxa_from_mtxb_translate_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
     result = {
         0x3eb22ba4, 0x3f182165, 0xbf399fa9, 0x415780ad,
         0x3da5dd28, 0xbf4a230c, 0xbf1bb6bf, 0xc0c1d985,
@@ -687,7 +684,7 @@ TEST_CASE("math mtxa tfset", "[mathutil]")
 
     vec1.f = {-0.5f, -1.f, 0.3};
     load_dummy_mtxa();
-    mtxa_tfset_point(&vec1.f);
+    mtxa_translate(&vec1.f);
     expected = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41d20d1f,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf713e30,
@@ -696,7 +693,7 @@ TEST_CASE("math mtxa tfset", "[mathutil]")
     check_mtxa(expected);
 
     load_dummy_mtxa();
-    mtxa_tfset_point_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
+    mtxa_translate_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
     expected = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41d20d1f,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbf713e30,
@@ -705,7 +702,7 @@ TEST_CASE("math mtxa tfset", "[mathutil]")
     check_mtxa(expected);
 
     load_dummy_mtxa();
-    mtxa_tfset_neg_point(&vec1.f);
+    mtxa_translate_neg(&vec1.f);
     expected = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41c37c43,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbe13924e,
@@ -714,7 +711,7 @@ TEST_CASE("math mtxa tfset", "[mathutil]")
     check_mtxa(expected);
 
     load_dummy_mtxa();
-    mtxa_tfset_neg_point_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
+    mtxa_translate_neg_xyz(vec1.f.x, vec1.f.y, vec1.f.z);
     expected = {
         0x3cfbd060, 0xbf377c09, 0x3f3258ba, 0x41c37c43,
         0xbe163ac8, 0x3f2fab90, 0x3f36635c, 0xbe13924e,
@@ -762,7 +759,7 @@ TEST_CASE("math_mtxa_rigid_inv_tf*()", "[mathutil]")
     vec1.f = {-0.5f, -1.f, 0.3};
 
     // Load dummy rigid transform into Matrix A
-    mtxa_from_identity_tl_xyz(0.1f, -4.2f, 7.5f);
+    mtxa_from_translate_xyz(0.1f, -4.2f, 7.5f);
     mtxa_rotate_x(0x38a0);
     mtxa_rotate_y(-0x6803);
     mtxa_rotate_z(0xc800);
@@ -790,7 +787,7 @@ TEST_CASE("math_mtxa_rigid_inv_tf*()", "[mathutil]")
 
 TEST_CASE("inverse rotation mtx equals inverse mtx", "[mathutil]")
 {
-    mtxa_from_identity_tl_xyz(0.1f, -4.2f, 7.5f);
+    mtxa_from_translate_xyz(0.1f, -4.2f, 7.5f);
     mtxa_rotate_x(0x38a0);
     mtxa_rotate_y(-0x6803);
     mtxa_rotate_z(0xc800);
@@ -802,4 +799,162 @@ TEST_CASE("inverse rotation mtx equals inverse mtx", "[mathutil]")
     mtxa_invert();
     mtxa_to_mtx(&inv.f);
     check_mtx(&rot_inv.f, &inv.f);
+}
+
+TEST_CASE("rotate mtx", "[mathutil]")
+{
+    load_dummy_mtxa();
+    mtxa_rotate_x(-0x5c91);
+    mtxa_rotate_z(0x20a9);
+    mtxa_rotate_y(0x5dff);
+    Ufmtx expected = {
+        0x3f421ced, 0xbd90ec15, 0x3f25ea63, 0x41cac4b1,
+        0x3efe5414, 0xbf14c637, 0xbf250504, 0xbf0b1162,
+        0x3ed832b2, 0x3f4f8afa, 0xbecf9ed2, 0xc22c6076,
+    };
+    check_mtxa(expected);
+}
+
+TEST_CASE("quat", "[mathutil]")
+{
+    Ufvec vec1, vec2, expected_vec;
+    Ufquat q1, q2, prod, expected;
+    Ufmtx expected_mtx;
+    load_dummy_mtxa();
+    mtxa_to_quat(&q1.f);
+    expected = {0xbea79815, 0x3f28d222, 0x3e646533, 0x3f23907c};
+    check_quat(&q1.f, &expected.f);
+
+    load_dummy_mtxb();
+    mtxa_from_mtxb();
+    mtxa_to_quat(&q2.f);
+    quat_mult(&prod.f, &q1.f, &q2.f);
+    expected = {0x3ccc2e87, 0x3e9944f4, 0xbf5f1687, 0x3ec68946};
+    check_quat(&prod.f, &expected.f);
+
+    mtxa_from_quat(&prod.f);
+    expected_mtx = {
+        0xbf32b242, 0x3f30d502, 0x3e413f69, 0x00000000,
+        0xbf293116, 0xbf0521f0, 0xbf0a8359, 0x00000000,
+        0xbe8d1b54, 0xbf009dc2, 0x3f51ccd4, 0x00000000,
+    };
+    check_mtxa(expected_mtx);
+
+    Ud d, expected_d;
+    d.d = quat_to_axis_angle(&q2.f, &vec2.f);
+    expected_vec = {0x3f4ef6f8, 0x3e6331e6, 0xbf0b8dff};
+    expected_d.u = 0x4005361e21a02bc4;
+    check_vec3f(&vec2.f, &expected_vec.f);
+    CHECK(d.d == Approx(expected_d.d));
+}
+
+TEST_CASE("quat_from_axis_angle()", "[mathutil]")
+{
+    Ufquat q1, expected;
+    Ufvec vec1;
+    vec1.f = {-3.5f, -1.007f, 8.3};
+    quat_from_axis_angle(&q1.f, &vec1.f, -0x5c91);
+    expected = {0x3eb35016, 0x3dce5d0b, 0xbf549d22, 0x3ed7a9dd};
+    check_quat(&q1.f, &expected.f); // TODO fix precision issues or ignore
+}
+
+TEST_CASE("quat_normalize()", "[mathutil]")
+{
+    Ufquat q1, expected;
+    load_dummy_mtxa();
+    mtxa_to_quat(&q1.f);
+    q1.f.x *= 3.2f;
+    q1.f.y *= 3.2f;
+    q1.f.z *= 3.2f;
+    q1.f.w *= 3.2f;
+    quat_normalize(&q1.f);
+    expected = {0xbea79814, 0x3f28d221, 0x3e646532, 0x3f23907b};
+    check_quat(&q1.f, &expected.f);
+}
+
+TEST_CASE("quat_from_dirs()", "[mathutil]")
+{
+    Ufquat q1, expected;
+    Ufvec vec1, vec2;
+    vec1.f = {-0.5f, -1.f, 0.3};
+    vec2.f = {-0.25f, -1.83f, 2.032f};
+    vec_normalize_len(&vec1.f);
+    vec_normalize_len(&vec2.f);
+    quat_from_dirs(&q1.f, &vec1.f, &vec2.f);
+    expected = {0xbe7b50e0, 0x3e1f7755, 0x3de1634a, 0x3f735258};
+    check_quat(&q1.f, &expected.f);
+
+    // TODO SMB's function has peculiar behavior when you pass it non-normalized vectors which we don't account for here.
+    // Fix this and test it here
+}
+
+TEST_CASE("quat_slerp()", "[mathutil]")
+{
+    Ufquat q1, q2, prod, expected;
+    load_dummy_mtxa();
+    load_dummy_mtxb();
+    mtxa_to_quat(&q1.f);
+    mtxa_from_mtxb();
+    mtxa_to_quat(&q2.f);
+    quat_slerp(0.75f, &prod.f, &q1.f, &q2.f);
+    expected = {0xbf53e5cb, 0x3d4014b8, 0x3f0f193c, 0x3c700f30};
+    check_quat(&prod.f, &expected.f);
+}
+
+TEST_CASE("ray_to_euler*()", "[mathutil]")
+{
+    Ufvec vec1, vec2, vec3;
+    Vec3s rot = {0x4242, 0x4242, 0x4242};
+
+    vec1.f = {-0.5f, -1.f, 0.3};
+    vec2.f = {-0.25f, -1.83f, 2.032f};
+    vec3.f = {0.25f, 1.83f, -2.032f};
+    ray_to_euler(&vec1.f, &vec2.f, &rot);
+    Vec3s expected = {-4619, -31273, 0};
+    CHECK(abs(rot.x - expected.x) <= 1);
+    CHECK(abs(rot.y - expected.y) <= 1);
+    CHECK(abs(rot.z - expected.z) <= 1);
+
+    s16 x, y;
+    ray_to_euler_xy(&vec1.f, &vec2.f, &x, &y);
+    s16 expected_x = -4619, expected_y = -31273;
+    CHECK(abs(x - expected_x) <= 1);
+    CHECK(abs(y - expected_y) <= 1);
+}
+
+TEST_CASE("vec_to_euler*()", "[mathutil]")
+{
+    Ufvec vec1;
+    Vec3s rot = {0x4242, 0x4242, 0x4242};
+    vec1.f = {-0.5f, -1.f, 0.3};
+
+    vec_to_euler(&vec1.f, &rot);
+    Vec3s expected = {-10878, 22021, 0};
+    CHECK(abs(rot.x - expected.x) <= 1);
+    CHECK(abs(rot.y - expected.y) <= 1);
+    CHECK(abs(rot.z - expected.z) <= 1);
+
+    s16 x, y;
+    vec_to_euler_xy(&vec1.f, &x, &y);
+    s16 expected_x = -10878, expected_y = 22021;
+    CHECK(abs(x - expected_x) <= 1);
+    CHECK(abs(y - expected_y) <= 1);
+}
+
+TEST_CASE("mtxa_to_euler*()", "[mathutil]")
+{
+    load_dummy_mtxa();
+    s16 x, y, z;
+    mtxa_to_euler_yxz(&y, &x, &z);
+    s16 expected_x = -8271, expected_y = 17636, expected_z = -2197;
+    CHECK(abs(x - expected_x) <= 1);
+    CHECK(abs(y - expected_y) <= 1);
+    CHECK(abs(z - expected_z) <= 1);
+
+    Vec3s rot = {0x4242, 0x4242, 0x4242};
+    mtxa_to_euler(&rot);
+    Vec3s expected = {-8271, 17636, -2197};
+    CHECK(abs(rot.x - expected.x) <= 1);
+    CHECK(abs(rot.y - expected.y) <= 1);
+    CHECK(abs(rot.z - expected.z) <= 1);
 }

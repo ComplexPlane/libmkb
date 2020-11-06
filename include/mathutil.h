@@ -113,14 +113,14 @@ void mtx_from_identity(Mtx *mtx);
 void mtxa_sq_from_identity();
 
 /*
- * Sets Matrix A to the identity matrix with the translation column set to `translate`.
+ * Set Matrix A to a translation matrix, with a translation of `translate`.
  */
-void mtxa_from_identity_tl(Vec3f *translate);
+void mtxa_from_translate(Vec3f *translate);
 
 /*
- * Sets Matrix A to the identity matrix with the translation column set to (x, y, z);
+ * Set Matrix A to a translation matrix, with a translation of (x, y, z).
  */
-void mtxa_from_identity_tl_xyz(f32 x, f32 y, f32 z);
+void mtxa_from_translate_xyz(f32 x, f32 y, f32 z);
 
 /*
  * Set Matrix A to a matrix representing an X rotation with the given angle.
@@ -138,28 +138,24 @@ void mtxa_from_rotate_y(s16 angle);
 void mtxa_from_rotate_z(s16 angle);
 
 /*
- * Initialize Matrix A to Matrix B, with the translation set to
- * a point transformed by Matrix B.
+ * Apply a translation to Matrix B on the right side, and assign the result to Matrix A.
  *
- * Point is given as a Vec3f.
+ * Translation is given as a Vec3f.
  *
  * Equivalent to:
- * mtxa = mtxb;
- * mtxa[, 3] = mtxb * point;
+ * mtxa = mtxb * translation_matrix(point)
  */
-void mtxa_from_mtxb_tfset_point(Vec3f *point);
+void mtxa_from_mtxb_translate(Vec3f *point);
 
 /*
- * Initialize Matrix A to Matrix B, with the translation set to
- * a point transformed by Matrix B.
+ * Apply a translation to Matrix B on the right side, and assign the result to Matrix A.
  *
- * Point is given as x, y, z components.
+ * Translation is given as (x, y, z) components
  *
  * Equivalent to:
- * mtxa = mtxb;
- * mtxa[, 3] = mtxb * point;
+ * mtxa = mtxb * translation_matrix(x, y, z)
  */
-void mtxa_from_mtxb_tfset_point_xyz(f32 x, f32 y, f32 z);
+void mtxa_from_mtxb_translate_xyz(f32 x, f32 y, f32 z);
 
 /*
  * Normalize each basis vector of Matrix A.
@@ -257,34 +253,46 @@ void mtxa_from_mtxb_mult_mtx(Mtx *mtx);
 void mtx_mult(Mtx *mtx1, Mtx *mtx2, Mtx *dst);
 
 /*
- * Transform a point by Matrix A, then assign the result to the translation column of Matrix A.
+ * Apply a translation transform to Matrix A on the right side.
  *
- * Point is given as a Vec3f.
+ * Translation is given as a Vec3f.
+ *
+ * Equivalent to:
+ * mtxa = mtxa * translation_matrix(point)
  */
-void mtxa_tfset_point(Vec3f *point);
+void mtxa_translate(Vec3f *point);
 
 /*
- * Transform a point by Matrix A, then assign the result to the translation column of Matrix A.
+ * Apply a translation transform to Matrix A on the right side.
  *
- * Point is given as x, y, z components.
+ * Translation is given as x, y, z components.
+ *
+ * Equivalent to:
+ * mtxa = mtxa * translation_matrix(x, y, z)
  */
-void mtxa_tfset_point_xyz(f32 x, f32 y, f32 z);
+void mtxa_translate_xyz(f32 x, f32 y, f32 z);
 
 /*
- * Transform the negation of a point by Matrix A,
- * then assign the result to the translation column of Matrix A.
+ * Apply a translation transform to Matrix A on the right side
+ * with the negative of the provided translation.
  *
- * Point is given as a Vec3f.
+ * Translation is given as a Vec3f.
+ *
+ * Equivalent to:
+ * mtxa = mtxa * translation_matrix(-point)
  */
-void mtxa_tfset_neg_point(Vec3f *point);
+void mtxa_translate_neg(Vec3f *point);
 
 /*
- * Transform the negation of a point by Matrix A,
- * then assign the result to the translation column of Matrix A.
+ * Apply a translation transform to Matrix A on the right side
+ * with the negative of the provided translation.
  *
- * Point is given as x, y, z components.
+ * Translation is given as x, y, z components.
+ *
+ * Equivalent to:
+ * mtxa = mtxa * translation_matrix(-x, -y, -z)
  */
-void mtxa_tfset_neg_point_xyz(f32 x, f32 y, f32 z);
+void mtxa_translate_neg_xyz(f32 x, f32 y, f32 z);
 
 /*
  * Scale the square part of Matrix A by the vector `scale`.
@@ -360,7 +368,7 @@ void mtxa_rigid_inv_tf_point_xyz(f32 x, f32 y, f32 z, Vec3f *dst);
  * by the inverse of Matrix A, assuming Matrix A is a rigid transformation.
  * The result is then negated.
  *
- * TODO I'm not really sure what this transformation represents. The function should probably
+ * TODO I'm not really sure what this transformation represents. The function should probably be
  * renamed once a better intuition is figured out.
  */
 void mtxa_rigid_inv_tf_tl(Vec3f *dst);
@@ -437,9 +445,11 @@ double quat_to_axis_angle(Quat *quat, Vec3f *out_axis);
 void quat_normalize(Quat *quat);
 
 /*
- * Compute the quaternion rotation between two vectors.
+ * Compute the quaternion rotation between two directions (normalized vectors).
+ *
+ * TODO implement and document behavior when non-normalized vectors are passed in
  */
-void quat_from_vecs(Quat *out_quat, Vec3f *start, Vec3f *end);
+void quat_from_dirs(Quat *out_quat, Vec3f *start, Vec3f *end);
 
 /*
  * Quaternion spherical linear interpolation.

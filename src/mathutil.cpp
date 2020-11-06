@@ -238,12 +238,12 @@ void mtxa_sq_from_identity()
     emtx_to_mtxa(emtx);
 }
 
-void mtxa_from_identity_tl(Vec3f *translate)
+void mtxa_from_translate(Vec3f *translate)
 {
-    mtxa_from_identity_tl_xyz(translate->x, translate->y, translate->z);
+    mtxa_from_translate_xyz(translate->x, translate->y, translate->z);
 }
 
-void mtxa_from_identity_tl_xyz(f32 x, f32 y, f32 z)
+void mtxa_from_translate_xyz(f32 x, f32 y, f32 z)
 {
     EigenMtx emtxa(emtx_from_mtxa());
     emtxa.linear().setIdentity();
@@ -269,12 +269,12 @@ void mtxa_from_rotate_z(s16 angle)
     emtx_to_mtxa(emtx);
 }
 
-void mtxa_from_mtxb_tfset_point(Vec3f *point)
+void mtxa_from_mtxb_translate(Vec3f *point)
 {
-    mtxa_from_mtxb_tfset_point_xyz(point->x, point->y, point->z);
+    mtxa_from_mtxb_translate_xyz(point->x, point->y, point->z);
 }
 
-void mtxa_from_mtxb_tfset_point_xyz(f32 x, f32 y, f32 z)
+void mtxa_from_mtxb_translate_xyz(f32 x, f32 y, f32 z)
 {
     Eigen::Vector3f epoint(x, y, z);
     EigenMtx emtxb(emtx_from_mtxb());
@@ -392,12 +392,12 @@ void mtx_mult(Mtx *mtx1, Mtx *mtx2, Mtx *dst)
     emtx_to_mtx(emtx_from_mtx(mtx1) * emtx_from_mtx(mtx2), dst);
 }
 
-void mtxa_tfset_point(Vec3f *point)
+void mtxa_translate(Vec3f *point)
 {
-    mtxa_tfset_point_xyz(point->x, point->y, point->z);
+    mtxa_translate_xyz(point->x, point->y, point->z);
 }
 
-void mtxa_tfset_point_xyz(f32 x, f32 y, f32 z)
+void mtxa_translate_xyz(f32 x, f32 y, f32 z)
 {
     Eigen::Vector3f epoint(x, y, z);
     EigenMtx emtx(emtx_from_mtxa());
@@ -405,14 +405,14 @@ void mtxa_tfset_point_xyz(f32 x, f32 y, f32 z)
     emtx_to_mtxa(emtx);
 }
 
-void mtxa_tfset_neg_point(Vec3f *point)
+void mtxa_translate_neg(Vec3f *point)
 {
-    mtxa_tfset_point_xyz(-point->x, -point->y, -point->z);
+    mtxa_translate_xyz(-point->x, -point->y, -point->z);
 }
 
-void mtxa_tfset_neg_point_xyz(f32 x, f32 y, f32 z)
+void mtxa_translate_neg_xyz(f32 x, f32 y, f32 z)
 {
-    mtxa_tfset_point_xyz(-x, -y, -z);
+    mtxa_translate_xyz(-x, -y, -z);
 }
 
 void mtxa_scale(Vec3f *scale)
@@ -527,9 +527,17 @@ void mtxa_to_quat(Quat *out_quat)
 
 void quat_from_axis_angle(Quat *out_quat, Vec3f *axis, s16 angle)
 {
-    // Unnecessary to first convert it to an Eigen transform?
-    EigenMtx m(Eigen::AngleAxisf(s16_to_radians(angle), Eigen::Vector3f((f32 *) axis)));
-    equat_to_quat(Eigen::Quaternionf(m.rotation()), out_quat);
+//    // Unnecessary to first convert it to an Eigen transform?
+//    Eigen::Vector3f evec(evec_from_vec3f(axis));
+//    evec.normalize();
+//    EigenMtx m(Eigen::AngleAxisf(s16_to_radians(angle), evec));
+//    equat_to_quat(Eigen::Quaternionf(m.rotation()), out_quat);
+
+    f32 coeff = math_rsqrt(VEC_LEN_SQ(*axis)) * math_sin(angle / 2);
+    out_quat->x = axis->x * coeff;
+    out_quat->y = axis->y * coeff;
+    out_quat->z = axis->z * coeff;
+    out_quat->w = math_sin(angle / 2 + 0x4000);
 }
 
 double quat_to_axis_angle(Quat *quat, Vec3f *out_axis)
@@ -545,7 +553,7 @@ void quat_normalize(Quat *quat)
     equat_to_quat(equat_from_quat(quat).normalized(), quat);
 }
 
-void quat_from_vecs(Quat *out_quat, Vec3f *start, Vec3f *end)
+void quat_from_dirs(Quat *out_quat, Vec3f *start, Vec3f *end)
 {
     Eigen::Vector3f estart((f32 *) start);
     Eigen::Vector3f eend((f32 *) end);
@@ -579,14 +587,14 @@ void vec_to_euler(Vec3f *vec, Vec3s *out_rot)
 {
     // The original game reimplements the logic here instead of calling `vec_to_euler_xy()`
     vec_to_euler_xy(vec, &out_rot->x, &out_rot->y);
-    out_rot->z = 0.f;
+    out_rot->z = 0;
 }
 
 void vec_to_euler_xy(Vec3f *vec, s16 *out_rot_x, s16 *out_rot_y)
 {
     f32 len2d = sqrt(vec->x * vec->x + vec->z * vec->z);
-    *out_rot_y = atan2(vec->y, len2d);
-    *out_rot_x = math_atan2(-vec->x, -vec->z);
+    *out_rot_x = math_atan2(vec->y, len2d);
+    *out_rot_y = math_atan2(-vec->x, -vec->z);
 }
 
 void mtxa_to_euler_yxz(s16 *out_rot_y, s16 *out_rot_x, s16 *out_rot_z)
@@ -595,8 +603,8 @@ void mtxa_to_euler_yxz(s16 *out_rot_y, s16 *out_rot_x, s16 *out_rot_z)
 
     Vec3f forward = {0.f, 0.f, -1.f};
     Vec3f up = {0.f, 1.f, 0.f};
-    mtxa_tf_point(&forward, &forward);
-    mtxa_tf_point(&up, &up);
+    mtxa_tf_vec(&forward, &forward);
+    mtxa_tf_vec(&up, &up);
 
     f32 forward_len2d = math_sqrt(forward.x * forward.x + forward.z * forward.z);
     *out_rot_x = math_atan2(forward.y, forward_len2d);
