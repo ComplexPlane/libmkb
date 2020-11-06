@@ -1,3 +1,48 @@
+/*
+ * Math utility library
+ * ====================
+ *
+ * A collection of math functions used extensively by the original game. In addition to Super Monkey Ball 2,
+ * variants of it also appear in Super Monkey Ball 1 and Super Monkey Ball: Banana Blitz.
+ *
+ * As a side note: the game uses a right-handed coordinate system with X "right", Y "up", and Z "towards you".
+ *
+ * Matrices
+ * --------
+ *
+ * Much of the library is dedicated to matrix operations. Matrices are represented by the Mtx type (float[3][4]).
+ * Most matrix functions operate on a global scratch matrix called Matrix A, and are prefixed with `mtxa_`.
+ * There's also an additional scratch matrix called Matrix B (`mtxb`), as well as a matrix stack which is useful
+ * for preserving the current value of Matrix A across function calls.
+ *
+ * Why operate on global scratch matrices instead of just Mtx's? It was faster: the scratch matrices were stored in
+ * the "locked cache" in the original game, a dedicated area of memory guaranteed to always be fast to read and write
+ * from.
+ *
+ * Rotations
+ * ---------
+ *
+ * Rotations about a single axis are often represented using shorts, a.k.a. `s16`. They're useful because they can
+ * represent a rotation with lots of precision with only 16 bits, and they automatically wrap as they're incremented
+ * or decremented. It's also compact to represent simple rotation literals: 0x4000 for 90 degrees, -0x2000 for -45
+ * degrees, etc.
+ *
+ * Vec3s is the type used to represent a rotation about the x, y, and z axes. Rotations aren't necessarily always
+ * applied in the same order by the game, however.
+ *
+ * Function Naming Conventions
+ * ------------------
+ *
+ * `mtxa` / `mtxb`: Uses Matrix A or Matrix B in some form
+ * `mtx`: Operates on a plain Mtx type
+ * `from`: Initializes the thing on the left using the thing on the right
+ * `neg`: Uses the negation of the passed vector
+ * `xyz` / `yxz` / `xy: Function takes separate x/y/z float arguments as opposed to a Vec3f or some other type
+ * `quat`: Operates on a quaternion (Quat) type
+ * `mult`: Involves multiplying two matrices or two quaternions
+ * `math`: Used to prefix some trig functions to avoid conflicts with the standard library
+ */
+
 #pragma once
 
 #include "mathtypes.h"

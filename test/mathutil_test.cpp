@@ -855,7 +855,12 @@ TEST_CASE("quat_from_axis_angle()", "[mathutil]")
     vec1.f = {-3.5f, -1.007f, 8.3};
     quat_from_axis_angle(&q1.f, &vec1.f, -0x5c91);
     expected = {0x3eb35016, 0x3dce5d0b, 0xbf549d22, 0x3ed7a9dd};
-    check_quat(&q1.f, &expected.f); // TODO fix precision issues or ignore
+    // TODO improve accuracy (potentially by using smb's trig function tables)
+    // so we don't need a less accurate check here
+    CHECK(abs(q1.f.x - expected.f.x) < 0.0001f);
+    CHECK(abs(q1.f.y - expected.f.y) < 0.0001f);
+    CHECK(abs(q1.f.z - expected.f.z) < 0.0001f);
+    CHECK(abs(q1.f.w - expected.f.w) < 0.0001f);
 }
 
 TEST_CASE("quat_normalize()", "[mathutil]")

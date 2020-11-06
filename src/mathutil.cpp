@@ -1,3 +1,16 @@
+/*
+ * See mathutil.h for most documentation on the math utility library.
+ *
+ * This math library in the original game was originally implemented with hand-written Gekko PowerPC assembly.
+ * Here in libmkb, we reimplement it in C++ with the help of the standard library as well the Eigen
+ * linear algebra library. Library functions should be mathematically equivalent and produce very close to identical
+ * results as the original game; unfortunately they cannot perfectly match as floating-point determinism is very hard
+ * to achieve cross-platform.
+ */
+
+// TODO check more NAN/INF cases?
+// TODO implement trig functions using SMB's trig tables for improved accuracy?
+
 #include "mathutil.h"
 
 // Needed for M_PI and other constants from <cmath>
@@ -8,8 +21,6 @@
 #include "mathtypes.h"
 #include "vecutil.h"
 #include "global_state.h"
-
-// TODO implement the equivalent of f32ing-point condition register checks?
 
 namespace mkb2
 {
