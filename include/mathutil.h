@@ -19,27 +19,51 @@
  * the "locked cache" in the original game, a dedicated area of memory guaranteed to always be fast to read and write
  * from.
  *
+ * Some functions "apply" a transform operation to Matrix A, for example `mtxa_rotate_x(angle)` performs the equivalent
+ * to multiplying Matrix A on the left by an X rotation matrix on the right. Due to applying operations on the right,
+ * transforming a vector by the matrix effectively applies the operations to the vector in the opposite order they
+ * were applied to the matrix (because in matrix-vector multiplication, the matrix is on the left and the vector
+ * is on the right). Just something to keep in mind when browsing the game's codebase.
+ *
+ * Vectors
+ * -------
+ *
+ * The canonical datatype for representing 3D vectors is Vec3f. Some functions take Vec3f, while others take (x, y, z)
+ * f32 values directly.
+ *
+ * Some functions are otherwise the same but either take a `point` or a `vec` as input. The difference is that `point`
+ * means a position in 3D space that is affected by translations, while `vec` means a vector: not affected by
+ * translation, but are affected by rotations and scales, for example.
+ *
  * Rotations
  * ---------
  *
  * Rotations about a single axis are often represented using shorts, a.k.a. `s16`. They're useful because they can
  * represent a rotation with lots of precision with only 16 bits, and they automatically wrap as they're incremented
- * or decremented. It's also compact to represent simple rotation literals: 0x4000 for 90 degrees, -0x2000 for -45
+ * or decremented. It's also easy to write simple rotation literals: 0x4000 for 90 degrees, -0x2000 for -45
  * degrees, etc.
  *
- * Vec3s is the type used to represent a rotation about the x, y, and z axes. Rotations aren't necessarily always
- * applied in the same order by the game, however.
+ * Vec3s is the type used to represent a rotation about the x, y, and z axes. Rotations aren't always applied
+ * in the same order by the game, however.
  *
  * Function Naming Conventions
- * ------------------
+ * ---------------------------
  *
  * `mtxa` / `mtxb`: Uses Matrix A or Matrix B in some form
  * `mtx`: Operates on a plain Mtx type
  * `from`: Initializes the thing on the left using the thing on the right
+ * `to`: Initializes the thing on the right using the thing on the left
+ * `tf`: Transform
+ * `inv_tf`: Inverse transform
+ * `mult`: Involves multiplying two matrices or two quaternions
+ * `rigid`: Assumes Matrix A is a rigid transform, a.k.a. only rotation+translation. Faster than non-`rigid` version
+ * `vec`: Vector
+ * `ray`: Directed line segment denoted by a start point and end point
+ * `dir`: Direction, a.k.a. normalized vector
+ * `euler`: Euler rotation angles
  * `neg`: Uses the negation of the passed vector
  * `xyz` / `yxz` / `xy: Function takes separate x/y/z float arguments as opposed to a Vec3f or some other type
  * `quat`: Operates on a quaternion (Quat) type
- * `mult`: Involves multiplying two matrices or two quaternions
  * `math`: Used to prefix some trig functions to avoid conflicts with the standard library
  */
 
